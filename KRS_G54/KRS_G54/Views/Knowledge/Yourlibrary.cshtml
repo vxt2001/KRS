@@ -1,0 +1,202 @@
+﻿@using KRS_G54.Models
+@model IEnumerable<KRS_G54.Models.Flashcard>
+@using X.PagedList
+@using X.PagedList.Mvc.Core
+@using X.PagedList.Web.Common
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    .dropdown-menu {
+        display: none;
+        position: absolute;
+        z-index: 1000;
+    }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+    .form-check-label {
+        margin-left: 20px; /* Adjust this value to increase/decrease left margin */
+    }
+</style>
+<div class="content-block">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-4 d-flex justify-content-center align-items-center">
+                <p>
+                    <a href="@Url.Action("Create")" class="btn btn-primary mr-2">
+                        <i class="fas fa-plus"></i> Create New FlashCard
+                    </a>
+                </p>
+            </div>
+
+            <div class="col-lg-5">
+                <form asp-action="ListSubject" method="get" class="form-inline">
+                    <div class="input-group">
+                        <input type="text" name="searchString" class="form-control" placeholder="Search by Flashcard name...">
+                        <div class="input-group-append">
+                            <button type="submit" class="btn btn-primary">Search</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="col-lg-3">
+
+                <form asp-action="Yourlibrary" method="get" class="form-inline" id="searchForm">
+                    <div class="dropdown">
+                        <button class="btn btn-secondary dropdown-toggle" type="button" id="subjectDropdownButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Filter by Subject:
+                        </button>
+                        <div class="dropdown-menu" aria-labelledby="subjectDropdownButton">
+                            <div class="dropdown-item">
+                                <div class="form-check">
+                                    <input type="checkbox" name="listAll" value="true" class="form-check-input" id="listAllCheckbox">
+                                    <label class="form-check-label ml-2" for="listAllCheckbox">List All</label>
+                                </div>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            @foreach (var subject in ViewBag.Subjects)
+                            {
+                                <div class="dropdown-item">
+                                    <div class="form-check">
+                                        <input type="checkbox" name="selectedSubjects" value="@subject.SubjectId" class="form-check-input subject-checkbox" id="subjectCheckbox@subject.SubjectId">
+                                        <label class="form-check-label ml-2" for="subjectCheckbox@subject.SubjectId">@subject.SubjectName</label>
+                                    </div>
+                                </div>
+                            }
+                            <div class="dropdown-divider"></div>
+                            <div class="dropdown-item" style="display: flex; justify-content: center;">
+                                <button type="submit" class="btn btn-primary" id="submitSelection">Submit</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+
+            </div>
+
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            @foreach (var s in Model)
+            {
+                <div class="col-lg-4 col-md-6 col-sm-12">
+                    <div class="post action-card m-b40" style="height:100%;">
+                        <div class="recent-news">
+                            <div class="info-bx">
+                                <h3 class="post-title">
+                                    <a href="@Url.Action("GetKnowledge", "Knowledge", new { flashcardId = s.FlashcardId })">@s.FlashcardName.ToUpper()</a>
+                                </h3>
+                                <ul style="list-style-type: none;">
+                                    @if (s.Subject != null)
+                                    {
+                                        <li style="min-height: 3em; overflow: hidden; text-overflow: ellipsis;">Subject: @s.Subject.SubjectName</li>
+                                    }
+                                    else
+                                    {
+                                        <li style="min-height: 3em; overflow: hidden; text-overflow: ellipsis;">Subject: Not assigned</li>
+                                    }
+                                </ul>
+                                <div class="post-extra">
+                                    <a href="@Url.Action("GetKnowledge", "Knowledge", new { flashcardId = s.FlashcardId })" class="btn btn-info btn-sm">Get Knowledge</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Phân trang -->
+            <div class="col-12">
+                @Html.PagedListPager((IPagedList)Model, page => Url.Action("ListSubject", new { page }), new PagedListRenderOptions { Display = PagedListDisplayMode.IfNeeded })
+            </div>
+
+            @if (ViewBag.NoFlashcardsFound != null && (bool)ViewBag.NoFlashcardsFound)
+            {
+                <div class="col-12 text-center">
+                    <p><strong>No flashcards found.</strong></p>
+                </div>
+            }
+        </div>
+    </div>
+
+
+    <button class="back-to-top fa fa-chevron-up"></button>
+</div>
+
+
+<button class="back-to-top fa fa-chevron-up"></button>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const dropdownButton = document.getElementById('subjectDropdownButton');
+        const dropdownMenu = document.querySelector('.dropdown-menu');
+        const submitButton = document.getElementById('submitSelection');
+
+        dropdownButton.addEventListener('click', function() {
+            dropdownMenu.classList.toggle('show');
+        });
+
+        submitButton.addEventListener('click', function() {
+            const checkboxes = document.querySelectorAll('input[name="selectedSubjects"]:checked');
+            const selectedValues = Array.from(checkboxes).map((checkbox) => checkbox.value);
+
+            if (selectedValues.length > 0) {
+                // Create a hidden input to store selected values
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = 'selectedSubjects';
+                hiddenInput.value = selectedValues.join(',');
+
+                // Append the hidden input to the form
+                const searchForm = document.getElementById('searchForm');
+                searchForm.appendChild(hiddenInput);
+            } else {
+                // No checkboxes selected, perform "list full" action
+                window.location.href = '@Url.Action("ListFull", "Knowledge")'; // Redirect to ListFull action
+            }
+
+            // Submit the form
+            searchForm.submit();
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const isClickInsideDropdown = dropdownButton.contains(event.target);
+            const isClickInsideDropdownMenu = dropdownMenu.contains(event.target);
+            if (!isClickInsideDropdown && !isClickInsideDropdownMenu) {
+                dropdownMenu.classList.remove('show');
+            }
+        });
+    });
+
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const listAllCheckbox = document.getElementById("listAllCheckbox");
+        const subjectCheckboxes = document.querySelectorAll(".subject-checkbox");
+
+        listAllCheckbox.addEventListener("change", function() {
+            if (this.checked) {
+                subjectCheckboxes.forEach(checkbox => {
+                    checkbox.checked = false;
+                    checkbox.disabled = true;
+                });
+            } else {
+                subjectCheckboxes.forEach(checkbox => {
+                    checkbox.disabled = false;
+                });
+            }
+        });
+
+        subjectCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener("change", function() {
+                if (this.checked) {
+                    listAllCheckbox.checked = false;
+                }
+            });
+        });
+    });
+</script>

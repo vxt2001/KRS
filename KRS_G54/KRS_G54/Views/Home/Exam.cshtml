@@ -1,0 +1,357 @@
+﻿@using Microsoft.AspNetCore.Http
+@using KRS_G54.Models
+@using X.PagedList
+@using X.PagedList.Mvc.Core;
+@using X.PagedList.Web.Common;
+@Html.AntiForgeryToken()
+@model IPagedList<KRS_G54.Models.Exam>
+
+@{
+    Layout = "~/Views/Shared/_Layout1.cshtml";
+}
+
+<!-- Check for TempData message -->
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-info">
+        @TempData["Message"]
+    </div>
+}
+
+<style>
+    .hidden {
+        display: none;
+    }
+
+    .add-exam-btn {
+        background-color: #28a745;
+        color: #fff;
+        border: none;
+        padding: 10px 20px;
+        margin-top: 20px;
+        margin-bottom: 20px;
+        cursor: pointer;
+        text-align: center;
+        display: inline-block;
+        font-size: 16px;
+        border-radius: 5px;
+    }
+
+        .add-exam-btn:hover {
+            background-color: #218838;
+        }
+
+    .container-fluid {
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    .widget-box {
+        width: 100%;
+        padding: 0 15px;
+        margin: 0 auto;
+    }
+
+    .card-courses-list {
+        width: 100%;
+    }
+
+    .card-courses-full-dec {
+        width: 100%;
+    }
+
+    .exam-results {
+        margin-top: 20px;
+    }
+
+    .show-attempts-btn {
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        padding: 10px 20px;
+        cursor: pointer;
+    }
+
+    .attempts-list {
+        margin-top: 10px;
+    }
+
+        .attempts-list.hidden {
+            display: none;
+        }
+
+    .previous-attempts {
+        list-style-type: none;
+        padding: 0;
+    }
+
+    .attempt {
+        display: flex;
+        align-items: center;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .score,
+    .remaining-time,
+    .completion-time {
+        flex-grow: 1;
+        margin-right: 10px;
+        font-size: 18px;
+    }
+
+    .review-btn {
+        background-color: #28a745;
+        color: #fff;
+        padding: 10px 20px;
+        text-decoration: none;
+        border-radius: 5px;
+    }
+
+        .review-btn:hover {
+            background-color: #218838;
+        }
+
+    .edit-btn {
+        background-color: #ffc107;
+        color: #212529;
+        padding: 10px 20px;
+        text-decoration: none;
+        border-radius: 5px;
+        margin-left: 10px;
+    }
+
+        .edit-btn:hover {
+            background-color: #e0a800;
+        }
+</style>
+
+<div class="ttr-sidebar">
+    <div class="ttr-sidebar-wrapper content-scroll">
+        <div class="ttr-sidebar-logo">
+            <a style="margin:0" href="@Url.Action("Index", "Home",new {})"><img alt="" src="~/assets/images/logo-white-2.png" width="120" height="10"></a>
+            <div class="ttr-sidebar-toggle-button">
+                <i class="ti-arrow-left"></i>
+            </div>
+        </div>
+        <nav class="ttr-sidebar-navi">
+            <ul>
+                <li>
+                    <a href="@Url.Action("Index", "Class", new {Id = ViewBag.ClassId })" class="ttr-material-button">
+                        <span class="ttr-icon"><i class="ti-book"></i></span>
+                        <span class="ttr-label">Class Info</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="@Url.Action("Exam", "Home")" class="ttr-material-button">
+                        <span class="ttr-icon"><i class="ti-book"></i></span>
+                        <span class="ttr-label">Exam</span>
+                    </a>
+                </li>
+                <li>
+                    @{
+                        var roleId = Context.Session.GetString("roleId");
+                        if (!string.IsNullOrEmpty(roleId)) // Kiểm tra xem roleId đã được đặt hay chưa
+                        {
+                            if (roleId.Equals("3"))
+                            {
+                                <a href="@Url.Action("ExamReport", "Home", new {classId = ViewBag.ClassId })" class="ttr-material-button">
+                                    <span class="ttr-icon"><i class="ti-home"></i></span>
+                                    <span class="ttr-label">Exam Report</span>
+                                </a>
+                            }
+                        }
+                    }
+
+                </li>
+                <li class="ttr-seperate"></li>
+            </ul>
+        </nav>
+    </div>
+</div>
+
+<main class="ttr-wrapper">
+    <div class="container-fluid">
+        <div class="db-breadcrumb">
+            <h4 class="breadcrumb-title">Exam</h4>
+            <ul class="db-breadcrumb-list">
+                <li>Exam List</li>
+            </ul>
+        </div>
+        <div class="row">
+            <div class="col-lg-12 m-b30">
+                <div class="widget-box">
+                    <div class="wc-title">
+                        <h4>Exam List</h4>
+                        @{
+                            if (!string.IsNullOrEmpty(roleId))
+                            {
+                                if (roleId.Equals("3"))
+                                {
+                                    @Html.ActionLink("Create", "Create", new { subjectId = ViewBag.SubjectId, classId = ViewBag.ClassId  }, new { @class = "btn btn-success mr-2" })
+                                }
+                            }
+
+                        }
+                    </div>
+                    <div class="widget-inner">
+                        @foreach (var exam in Model)
+                        {
+                            <div class="card-courses-list bookmarks-bx" data-start-date="@exam.CreatedDate" data-end-date="@exam.EndDate">
+                                <div class="card-courses-full-dec">
+                                    <div class="card-courses-title">
+                                        <h4 class="m-b5">
+                                            <a href="javascript:void(0);" class="exam-link"
+                                               data-exam-id="@exam.ExamId">@exam.ExamName</a>
+                                            @{
+                                                if (!string.IsNullOrEmpty(roleId))
+                                                {
+                                                    if (roleId.Equals("3"))
+                                                    {
+                                                        @Html.ActionLink("Edit", "Edit",
+                                        new { Id = exam.ExamId,
+                                        subjectId = ViewBag.SubjectId,
+                                        classId = ViewBag.ClassId }
+                                        , new { @class = "btn btn-success mr-2" })
+                                                        @Html.ActionLink("Edit List Question", "EditListQuestion",
+                                        new { Id = exam.ExamId }, new { @class = "btn btn-primary" })
+                                                        <button class="btn btn-danger delete-exam-btn" data-exam-id="@exam.ExamId">Delete</button>
+                                                    }
+                                                }
+                                            }
+                                        </h4>
+                                    </div>
+                                    <div class="card-courses-list-bx">
+                                        <ul class="card-courses-view">
+                                            <li class="card-courses-categories">
+                                                <h5>Subject</h5>
+                                                <h4>@exam.Subject.SubjectName</h4>
+                                            </li>
+                                            <li class="card-courses-categories">
+                                                <h5>Question: @exam.QuestionCount</h5>
+                                                <h4>Time: @exam.TimeCount Minutes</h4>
+                                            </li>
+                                            <li class="card-courses-categories">
+                                                <h4>Start Date: @exam.CreatedDate?.Day/@exam.CreatedDate?.Month/@exam.CreatedDate?.Year @exam.CreatedDate?.Hour:@exam.CreatedDate?.Minute:@exam.CreatedDate?.Second</h4>
+                                                <h4>End Date: @exam.EndDate?.Day/@exam.EndDate?.Month/@exam.EndDate?.Year @exam.EndDate?.Hour:@exam.EndDate?.Minute:@exam.EndDate?.Second</h4>
+                                            </li>
+
+                                        </ul>
+                                    </div>
+                                    @{
+                                        var examResults = ViewBag.ExamResults[exam.ExamId] as List<ExamResult>;
+                                    }
+                                    <div class="exam-results">
+                                        <button class="show-attempts-btn">Show Previous Attempts</button>
+                                        <div class="attempts-list hidden" style="width: 100%;">
+                                            @if (examResults != null && examResults.Any())
+                                            {
+                                                <h5>Previous Attempts:</h5>
+                                                <ul class="previous-attempts">
+                                                    @foreach (var result in examResults)
+                                                    {
+                                                        <li class="attempt">
+                                                            <div class="score">
+                                                                <strong>Score:</strong> @result.Score
+                                                            </div>
+                                                            <div class="remaining-time">
+                                                                <strong>Remaining Time:</strong> @(String.Format("{0:00}:{1:00}", result.RemainingTime / 60, result.RemainingTime % 60))
+                                                            </div>
+                                                            <div class="completion-time">
+                                                                <strong>Completion Time:</strong> @result.CompletionTime
+                                                            </div>
+                                                            <a href="@Url.Action("ReviewExam", "Home", new { examID = exam.ExamId, examResultId = result.ExamResultId })"
+                                                               class="review-btn">Review</a>
+                                                        </li>
+                                                    }
+                                                </ul>
+                                            }
+                                            else
+                                            {
+                                                <p class="no-attempts">No previous attempts found.</p>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="text-center">
+                    @Html.PagedListPager(Model, page => Url.Action("Exam", new { page }), new PagedListRenderOptions
+                    {
+                    Display = PagedListDisplayMode.IfNeeded,
+                    DisplayLinkToPreviousPage = PagedListDisplayMode.Always,
+                    DisplayLinkToNextPage = PagedListDisplayMode.Always,
+                    UlElementClasses = new[] { "pagination" },
+                    LiElementClasses = new[] { "page-item" },
+                    PageClasses = new[] { "page-link" }
+                    })
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.querySelectorAll('.show-attempts-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const attemptsList = btn.nextElementSibling;
+                attemptsList.classList.toggle('hidden');
+            });
+        });
+        document.querySelectorAll('.delete-exam-btn').forEach(button => {
+            button.addEventListener('click', function () {
+                if (confirm('Are you sure you want to delete this exam?')) {
+                    const examId = this.getAttribute('data-exam-id');
+                    fetch(`/Home/DeleteExam/${examId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                        }
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert('Exam deleted successfully.');
+                                this.closest('.card-courses-list').remove();
+                            } else {
+                                alert('Failed to delete exam: ' + data.message);
+                            }
+                        })
+                        .catch(error => console.error('Error:', error));
+                }
+            });
+        });
+        document.querySelectorAll('.exam-link').forEach(link => {
+            link.addEventListener('click', function (event) {
+                event.preventDefault();
+                const examId = this.getAttribute('data-exam-id');
+                const examBlock = this.closest('.card-courses-list');
+                const startDate = new Date(examBlock.getAttribute('data-start-date'));
+                const endDate = new Date(examBlock.getAttribute('data-end-date'));
+                const currentDate = new Date();
+
+                if (currentDate < startDate) {
+                    alert("The exam has not started yet.");
+                } else if (currentDate > endDate) {
+                    alert("The exam has ended.");
+                } else {
+                    fetch(`/Home/CheckExamDetail/${examId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (!data.success) {
+                                alert(data.message);
+                            } else {
+                                window.location.href = `/Home/ExamDetail/${examId}`;
+                            }
+                        })
+                        .catch(error => console.error('Error:', error));
+                }
+            });
+        });
+    </script>
+</main>
+<div class="ttr-overlay"></div>

@@ -1,0 +1,101 @@
+﻿@model KRS_G54.Models.Exam
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@addTagHelper *, AuthoringTagHelpers
+@{
+    Layout = "/Areas/Manager/Views/Shared/_Layout.cshtml";
+}
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+<script src="~/ckeditor/ckeditor.js"></script>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <!-- Your Profile Views Chart -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="card-title">Create Exam</h4>
+                </div>
+                <div class="card-body">
+                    <form id="examForm">
+                        <div class="form-group">
+                            <label for="name">Exam Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="name" name="ename" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="IdSubject">Subject Code <span class="text-danger">*</span></label>
+                            <select id="IdSubject" class="form-control" required>
+                                @foreach (var item in ViewBag.ListSubject)
+                                {
+                                    <option value="@item.SubjectId">@item.SubjectCode</option>
+                                }
+                            </select>
+                        </div>
+                        <button type="button" class="btn btn-primary" id="create">Save</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tempus-dominus/5.39.0/css/tempus-dominus.min.css" integrity="sha512-Zv4tsNEf3YeBnxpb7v8zuyav7I9H60a1kCEk5FGszP0b0BzzUz5bgTpxdZ6kQs8FIj/xsE8V4pT/Io+TCEbhFg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tempus-dominus/5.39.0/js/tempus-dominus.min.js" integrity="sha512-QwEC2Er5n6Z7esGHbK/A0sA9F5X9TFDb04Wl4YEdQ1vY+60ZLe4YWILVhGaf0ME1DZbRMCz5D/mTsoICgKaaAA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script type="text/javascript">
+    $(function () {
+        $("#create").click(function () {
+            var examName = $('#name').val();
+            var subjectId = $('#IdSubject').val();
+
+            if (!examName || !subjectId) {
+                $(document).Toasts('create', {
+                    icon: 'fas fa-exclamation-triangle',
+                    position: 'bottomRight',
+                    class: 'bg-danger m-1',
+                    autohide: true,
+                    delay: 2000,
+                    title: 'Error!',
+                    body: 'Please fill all required fields.'
+                });
+                return;
+            }
+
+            var data = {
+                Id: 0,
+                ExamName: examName,
+                SubjectId: subjectId,
+                IsPractice: true,
+            };
+
+            $.ajax({
+                type: 'POST',
+                url: 'Create',
+                data: data,
+                success: function (response) {
+                    if (response == '-1') {
+                        $(document).Toasts('create', {
+                            icon: 'fas fa-exclamation-triangle',
+                            position: 'bottomRight',
+                            class: 'bg-danger m-1',
+                            autohide: true,
+                            delay: 2000,
+                            title: 'Error!',
+                            body: 'An error occurred!'
+                        });
+                    } else {
+                        $(document).Toasts('create', {
+                            icon: 'fas fa-check',
+                            position: 'bottomRight',
+                            class: 'bg-success m-1',
+                            autohide: true,
+                            title: 'Notification!',
+                            body: 'Success!'
+                        });
+                        window.location.replace("ListQuestion?id=" + response);
+                    }
+                },
+                error: function (data) {
+                    console.log(data);
+                }
+            });
+        });
+    });
+</script>

@@ -1,0 +1,327 @@
+﻿@model List<KRS_G54.Models.Knowledge>;
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@addTagHelper *, AuthoringTagHelpers
+
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            background-color: white;
+        }
+
+        .flashcard {
+            width: 900px;
+            height: 400px;
+            background-color: white;
+            color: black;
+            border-radius: 10px;
+            position: relative;
+            box-shadow: 5px 5px 10px rgba(0,0,0,0.2);
+            margin: 0 auto;
+            margin-top: 100px;
+            transform-style: preserve-3d;
+            transition: all 1s ease-in-out;
+            cursor: pointer;
+        }
+
+            .flashcard .front, .flashcard .back {
+                width: 100%;
+                height: 100%;
+                position: absolute;
+                border-radius: 10px;
+                backface-visibility: hidden;
+                padding: 20px;
+                box-sizing: border-box;
+            }
+
+            .flashcard .front {
+                z-index: 2;
+                background-color: lightblue;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-around;
+                align-items: center;
+                transform: rotateY(0deg);
+                letter-spacing: -0.5px; /* Điều chỉnh khoảng cách giữa các ký tự */
+                text-align: center; /* Căn giữa nội dung */
+            }
+
+            .flashcard .back {
+                transform: rotateY(-180deg);
+                background-color: whitesmoke;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-around;
+                align-items: center;
+            }
+
+                .flashcard .front h2, .flashcard .back h2 {
+                    margin: 1px 0;
+                    font-size: 24px;
+                    font-weight: normal; /* Để chắc chắn rằng font-weight là mặc định */
+                    line-height: 1.5; /* Điều chỉnh chiều cao dòng cho chữ tiếng Việt */
+                    white-space: pre-line; /* Xuống dòng được bảo tồn */
+                      overflow: auto; /* Tạo thanh cuộn nếu nội dung vượt quá kích thước */
+                }
+
+                .flashcard .front p, .flashcard .back p {
+                    margin: 1px 0;
+                    font-size: 18px;
+                    white-space: pre-line; /* Xuống dòng được bảo tồn */
+                }
+
+                .flashcard .front button, .flashcard .back button {
+                    border: none;
+                    background-color: dodgerblue;
+                    color: white;
+                    padding: 10px 20px;
+                    border-radius: 5px;
+                    cursor: pointer;
+                }
+
+                    .flashcard .front button:hover, .flashcard .back button:hover {
+                        background-color: blue;
+                    }
+
+        .flipped {
+            transform: rotateY(-180deg);
+        }
+
+        .flashcard .front p, .flashcard .back p {
+            display: inline-block;
+            margin: 0;
+            font-size: 18px;
+        }
+
+        #buttonContainer {
+            text-align: center;
+        }
+
+        #nextButton, #prevButton {
+            margin: 10px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: dodgerblue;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+            #nextButton:hover, #prevButton:hover {
+                background-color: blue; /* Màu nền của nút khi rê chuột qua */
+            }
+
+        #quizletContainer {
+            margin-top: 20px;
+        }
+
+        .quizletItem {
+            margin-bottom: 10px;
+            overflow: hidden;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            background-color: #E0FFFF;
+        }
+
+        .question,
+        .answer {
+            float: left;
+            width: calc(50% - 10px);
+            box-sizing: border-box;
+            padding: 10px;
+        }
+
+
+
+        .separator {
+            color: black;
+            height: 100%;
+            width: 100px;
+            background-color: #black;
+            float: left;
+        }
+
+        .post-extra {
+            text-align: right; /* Căn chỉnh văn bản sang phải */
+        }
+
+            .post-extra .btn {
+                /* Tùy chỉnh kiểu hiển thị của nút tại đây */
+                /* Ví dụ: */
+
+                color: black;
+                border: none;
+                /* Các thuộc tính CSS khác */
+            }
+
+                .post-extra .btn:hover {
+                    /* Tùy chỉnh kiểu hiển thị khi rê chuột qua nút */
+                    /* Ví dụ: */
+                    background-color: darkred;
+                }
+
+        .done-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Ẩn phần tử này mặc định */
+        .hidden {
+            display: none;
+        }
+
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- Thêm jQuery -->
+    <script>
+
+        var currentQuestion = 0;
+
+        function showNextQuestion() {
+            var knowledgeItems = $(".knowledgeItem");
+
+            // Kiểm tra nếu đã đến flashcard cuối cùng
+            if (currentQuestion >= knowledgeItems.length) {
+                // Ẩn nội dung câu hỏi và câu trả lời
+                $(".front h2, .front p, .back h2, .back p").text("");
+                // Ẩn nút "Next" và "Previous"
+                $("#nextButton, #prevButton").hide();
+                // Hiện thông báo "Done 100%"
+                $(".done-message").removeClass("hidden");
+            } else {
+                // Nếu chưa đến flashcard cuối cùng
+        @*   $(".front h2").text("Question " + (currentQuestion + 1));*@
+                    $(".front h2").text(knowledgeItems.eq(currentQuestion).find("div").first().text().split(' Answer:')[0]);
+
+        @*   $(".back h2").text("Answer " + (currentQuestion + 1));*@
+                    $(".back h2").text(knowledgeItems.eq(currentQuestion).find("div").last().text().split('Answer:')[1].trim());
+            }
+
+        @*    if (currentQuestion === knowledgeItems.length - 1) {
+                $(".front h2").text(""); // Xóa nội dung của câu hỏi khi đến cuối cùng
+                $(".front p").text(""); // Xóa nội dung của câu trả lời khi đến cuối cùng
+                $(".back h2").text(""); // Xóa nội dung của câu trả lời khi đến cuối cùng
+                $(".back p").text(""); // Xóa nội dung của câu trả lời khi đến cuối cùng
+                $("#nextButton").hide(); // Ẩn nút Next khi đến câu cuối cùng
+                $("#prevButton").hide(); // Ẩn nút Next khi đến câu cuối cùng
+                $(".done-message").removeClass("hidden"); // Hiện thông báo "Done 100%"
+                }*@
+                                                                                                }
+
+        $(document).ready(function() {
+            showNextQuestion(); // Hiển thị câu hỏi và câu trả lời đầu tiên khi trang được tải
+
+            $(".flashcard").click(function() {
+                var flashcard = $("#flashcard");
+                flashcard.toggleClass("flipped");
+            });
+
+            $("button#nextButton").click(function(event) {
+                event.stopPropagation(); // Ngăn chặn sự kiện click từ nút Next lan ra phần tử cha
+                currentQuestion++;
+                showNextQuestion();
+            });
+
+            $("button#prevButton").click(function(event) {
+                event.stopPropagation(); // Ngăn chặn sự kiện click từ nút Previous lan ra phần tử cha
+                currentQuestion--;
+                if (currentQuestion < 0) {
+                    currentQuestion = $(".knowledgeItem").length - 1;
+                }
+                showNextQuestion();
+            });
+
+            $("#restartButton").click(function() {
+                $(".flashcard").removeClass("hidden"); // Hiển thị lại bảng lật khi chọn lại danh sách
+                $(".done-message").addClass("hidden"); // Ẩn đi thông báo "Done 100%"
+                $("#nextButton").show(); // Hiển thị lại nút Next khi chọn lại danh sách
+                $("#prevButton").show(); // Hiển thị lại nút Next khi chọn lại danh sách
+                currentQuestion = 0; // Reset lại câu hỏi khi chọn lại danh sách
+                showNextQuestion(); // Hiển thị câu hỏi đầu tiên khi chọn lại danh sách
+            });
+        });
+
+
+        $(document).ready(function() {
+            $(".deleteFlashcardBtn").click(function() {
+                var flashcardId = $(this).data("flashcard-id");
+                if (confirm("Are you sure you want to delete this flashcard and its associated knowledge?")) {
+                    $.ajax({
+                        url: '@Url.Action("DeleteFlashcard", "Knowledge")',
+                        type: 'POST',
+                        data: {
+                            flashcardId: flashcardId,
+                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                        },
+                        success: function(result) {
+                            // Xử lý kết quả thành công, ví dụ: chuyển hướng lại trang hoặc cập nhật giao diện người dùng
+                            window.location.reload();
+                        },
+                        error: function(xhr, status, error) {
+                            alert("Error deleting flashcard: " + xhr.responseText);
+                        }
+                    });
+                }
+            });
+        });
+
+
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div style="display: flex; align-items: center; justify-content: center; position: relative;">
+            <a href="@Url.Action("GetKnowledge", "Knowledge", new { flashcardId = Model.FirstOrDefault()?.FlashcardId })" class="btn btn-danger btn-sm" style="position: absolute; left: 0;">&larr;</a>
+            <strong style="font-size: 24px;">@Model.FirstOrDefault()?.Flashcard?.FlashcardName.ToUpper()</strong>
+        </div>
+
+        <div class="flashcard-container">
+
+            <div class="flashcard" id="flashcard">
+                <div class="front">
+                    <h2></h2>
+                </div>
+                <div class="back">
+                    <h2></h2>
+                </div>
+            </div>
+            <div class="done-message hidden">
+                <h2>Have Learn Done 100%</h2>
+                <button id="restartButton" class="btn btn-primary">Reset Flashcard</button>
+            </div>
+        </div>
+        <div id="buttonContainer">
+            <button id="prevButton">Previous</button>
+            <button id="nextButton">Next</button>
+        </div>
+        <div id="knowledgeList" style="display: none;">
+            @{
+                int order = 1;
+            }
+            @foreach (var item in Model)
+            {
+                <div class="knowledgeItem" style="display: none;">
+                    <div>
+                        @Html.Raw(item.Knowledge1.Replace("\n", "<br>"))
+                        Answer: @Html.Raw(item.Answer.Replace("\n", "<br>"))
+                    </div>
+                    <hr />
+                </div>
+                order++;
+            }
+        </div>
+    </div>
+</body>
+</html>
+
+

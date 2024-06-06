@@ -1,0 +1,55 @@
+﻿@model KRS_G54.Models.ExamKnowledge
+
+@{
+    ViewData["Title"] = "Edit Lesson";
+    Layout = "/Areas/Manager/Views/Shared/_Layout.cshtml";
+}
+
+<h1>Edit Lesson</h1>
+
+<form asp-action="EditLesson" method="post">
+    <div class="form-group">
+        <label for="subjectId">Select Subject:</label>
+        <select class="form-control" id="subjectId" name="subjectId">
+            <option value="" selected>Select Subject</option>
+            @foreach (var subject in ViewBag.SubjectList)
+            {
+                <option value="@subject.SubjectId" @(subject.SubjectId == Model.SubjectId ? "selected" : "")>@subject.SubjectCode</option>
+            }
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="lessonId">Select Lesson:</label>
+        <select class="form-control" id="lessonId" name="lessonId">
+            <option value="" selected>Select Lesson</option>
+            @foreach (var lesson in ViewBag.LessonList)
+            {
+                <option value="@lesson.LessonId" @(lesson.LessonId == Model.LessonId ? "selected" : "")>@lesson.Topic</option>
+            }
+        </select>
+    </div>
+    <input type="hidden" name="id" value="@Model.ExamKnowledgeId" />
+    <button type="submit" class="btn btn-primary">Save</button>
+</form>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#subjectId').change(function() {
+            var subjectId = $(this).val();
+            if (subjectId) {
+                $.getJSON('@Url.Action("GetLessonsBySubject")', { subjectId: subjectId }, function(data) {
+                    var $lessonDropdown = $('#lessonId');
+                    $lessonDropdown.empty();
+                    $lessonDropdown.append($('<option>').text('Select Lesson').attr('value', ''));
+                    $.each(data, function(i, lesson) {
+                        $lessonDropdown.append($('<option>').text(lesson.topic).attr('value', lesson.lessonId));
+                    });
+                });
+            } else {
+                $('#lessonId').empty();
+                $('#lessonId').append($('<option>').text('Select Lesson').attr('value', ''));
+            }
+        });
+    });
+</script>

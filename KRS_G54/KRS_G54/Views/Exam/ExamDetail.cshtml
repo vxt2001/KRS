@@ -1,0 +1,319 @@
+﻿﻿@using Microsoft.AspNetCore.Http;
+@using KRS_G54.Models
+@model IEnumerable<KRS_G54.Models.UserQuestion>
+@{
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+}
+@{
+    // Lấy danh sách câu trả lời từ ViewBag và chuyển sang List<AnswerOption>
+    var answers = ViewBag.Answers as List<AnswerOption>;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz</title>
+    @if (ViewBag.QuestionTime > 0)
+    {
+        <meta name="question-time" content="@ViewBag.QuestionTime" />
+    }
+    <style>
+        .navigation-buttons button.previous-btn,
+        .navigation-buttons button.next-btn {
+            background-color: #555;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+            .navigation-buttons button.previous-btn:hover,
+            .navigation-buttons button.next-btn:hover {
+                background-color: #333;
+            }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f7f7f7;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 80%;
+            margin: 50px auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        form {
+            text-align: left;
+        }
+
+        .question {
+            margin-bottom: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .options label {
+            display: block;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+
+        input[type="radio"], input[type="checkbox"] {
+            margin-right: 10px;
+        }
+
+        input[type="submit"] {
+            display: block;
+            margin: 0 auto;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+            input[type="submit"]:hover {
+                background-color: #45a049;
+            }
+
+        .horizontal-nav {
+            display: grid;
+            grid-template-columns: repeat(20, 1fr);
+            gap: 10px;
+        }
+
+        .question {
+            display: none;
+        }
+
+            .question.active {
+                display: block;
+            }
+
+        .square-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            margin: 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            text-decoration: none;
+            color: #333;
+            box-sizing: border-box;
+        }
+
+            .square-btn:hover {
+                background-color: #f0f0f0;
+            }
+
+            .square-btn span {
+                display: inline-block;
+            }
+
+            .square-btn.checked {
+                opacity: 0.5;
+            }
+
+        .navigation-buttons button.previous-btn,
+        .navigation-buttons button.next-btn {
+            background-color: #555;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+            .navigation-buttons button.previous-btn:hover,
+            .navigation-buttons button.next-btn:hover {
+                background-color: #333;
+            }
+        .navigation-buttons {
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>@ViewBag.ExamName</h1>
+        <div style="position: relative;">
+            @if (ViewBag.QuestionTime > 0)
+            {
+                <h2 id="timer">Time Left: @ViewBag.QuestionTime</h2>
+            }
+            <nav class="horizontal-nav">
+                @{
+                    int questionNumb = 1;
+                    foreach (var question in ViewBag.Questions)
+                    {
+                        <a href="#" class="square-btn" data-question-id="@question.ExamKnowledgeId">
+                            <span>@questionNumb</span>
+                        </a>
+                        questionNumb++;
+                    }
+                }
+            </nav>
+        </div>
+        @if (ViewBag.QuestionCount > 0)
+        {
+            <form asp-action="SubmitExam" asp-controller="Exam" method="post">
+                <input type="hidden" name="examID" value="@ViewBag.ExamID">
+                @{
+                    var questionNumber = 1;
+                }
+                @foreach (var question in ViewBag.Questions)
+                {
+                    <div class="question @(questionNumber == 1 ? "active" : "")" id="question_@question.ExamKnowledgeId">
+                        <p><strong>Question @questionNumber:</strong> @question.ExamKnowledge.Knowledge</p>
+                        <div class="options">
+                            @{
+                                var questionAnswers = answers.Where(a => a.ExamKnowledgeId == question.ExamKnowledgeId);
+                                var keyCount = ViewBag.KeyCounts[question.ExamKnowledgeId];
+                            }
+                            @if (keyCount >= 2)
+                            {
+                                foreach (var answer in questionAnswers)
+                                {
+                                    <label>
+                                        <input type="checkbox"
+                                               name="selectedAnswers[@questionNumber][]"
+                                               value="@answer.AnswerOptionId"
+                                               data-question-id="@question.ExamKnowledgeId">
+                                        @answer.AnswerOption1
+                                    </label>
+                                }
+                                <input type="hidden" name="selectedAnswers[@questionNumber][]" value="0">
+                            }
+                            else
+                            {
+                                foreach (var answer in questionAnswers)
+                                {
+                                    <label>
+                                        <input type="radio"
+                                               name="selectedAnswers[@questionNumber][]"
+                                               value="@answer.AnswerOptionId"
+                                               data-question-id="@question.ExamKnowledgeId">
+                                        @answer.AnswerOption1
+                                    </label>
+                                }
+                                <input type="hidden" name="selectedAnswers[@questionNumber][]" value="0">
+                            }
+                        </div>
+                        <div class="navigation-buttons">
+                            @if (questionNumber > 1)
+                            {
+                                <button type="button" class="previous-btn">Previous</button>
+                            }
+                            @if (questionNumber < ViewBag.QuestionCount)
+                            {
+                                <button type="button" class="next-btn">Next</button>
+                            }
+                        </div>
+                    </div>
+                    questionNumber++;
+                }
+
+                <input type="hidden" id="remainingTimeInput" name="remainingTime" value="">
+                <input type="submit" value="Submit">
+            </form>
+        }
+        else
+        {
+            <p>No questions available for this exam.</p>
+        }
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const timerElement = document.getElementById("timer");
+            if (timerElement) {
+                let timeLeft = parseInt(document.querySelector('meta[name="question-time"]').content);
+
+                const updateTimer = () => {
+                    const minutes = Math.floor(timeLeft / 60);
+                    const seconds = timeLeft % 60;
+                    timerElement.textContent = `Time Left: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+                    if (timeLeft > 0) {
+                        timeLeft--;
+                    } else {
+                        document.querySelector("form").submit();
+                    }
+                };
+
+                setInterval(updateTimer, 1000);
+            }
+
+            const squareBtns = document.querySelectorAll('.square-btn');
+            const questions = document.querySelectorAll('.question');
+            const nextBtns = document.querySelectorAll('.next-btn');
+            const previousBtns = document.querySelectorAll('.previous-btn');
+
+            squareBtns.forEach(btn => {
+                btn.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    const questionId = this.dataset.questionId;
+                    questions.forEach(q => q.classList.remove('active'));
+                    document.getElementById(`question_${questionId}`).classList.add('active');
+                });
+            });
+
+            nextBtns.forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const currentQuestion = this.closest('.question');
+                    const nextQuestion = currentQuestion.nextElementSibling;
+                    if (nextQuestion && nextQuestion.classList.contains('question')) {
+                        currentQuestion.classList.remove('active');
+                        nextQuestion.classList.add('active');
+                    }
+                });
+            });
+
+            previousBtns.forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const currentQuestion = this.closest('.question');
+                    const previousQuestion = currentQuestion.previousElementSibling;
+                    if (previousQuestion && previousQuestion.classList.contains('question')) {
+                        currentQuestion.classList.remove('active');
+                        previousQuestion.classList.add('active');
+                    }
+                });
+            });
+        });
+
+        // Function to check checkboxes and radios when clicked
+        const inputs = document.querySelectorAll('.options input[type="checkbox"], .options input[type="radio"]');
+        inputs.forEach(input => {
+            input.addEventListener('change', function () {
+                const questionId = this.dataset.questionId;
+                const correspondingBtn = document.querySelector(`.square-btn[data-question-id="${questionId}"]`);
+                if (correspondingBtn) {
+                    correspondingBtn.classList.add('checked');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

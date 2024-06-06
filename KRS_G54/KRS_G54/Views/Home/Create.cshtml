@@ -1,0 +1,198 @@
+﻿@model KRS_G54.Models.Exam
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@addTagHelper *, AuthoringTagHelpers
+@{
+    Layout = "~/Views/Shared/_Layout1.cshtml";
+}
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+<script src="~/ckeditor/ckeditor.js"></script>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <!-- Your Profile Views Chart -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div>
+                    <a href="@Url.Action("Exam", "Home")" class="btn btn-secondary mb-3">
+                        <span class="ttr-icon"><i class="ti-book"></i></span>
+                        <span class="ttr-label">Back To Exam List</span>
+                    </a>
+                </div>
+                <div class="card-header bg-primary text-white">
+                    <h4 class="card-title">Create Exam</h4>
+                </div>
+                <div class="card-body">
+                    <form id="examForm">
+                        <div class="form-group" id="examNameGroup">
+                            <label for="name">Exam Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="name" name="ename" required>
+                            <div class="invalid-feedback">Exam Name is required.</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="IdClass">Class Name <span class="text-danger">*</span></label>
+                            <input type="text" id="IdClass" class="form-control" value="@ViewBag.Class.ClassName" readonly />
+                            <input type="hidden" id="IdClassValue" name="classId" value="@ViewBag.Class.ClassId" />
+                        </div>
+                        <div class="form-group">
+                            <label for="IdSubject">Subject Name <span class="text-danger">*</span></label>
+                            <input type="text" id="IdSubject" class="form-control" value="@ViewBag.Subject.SubjectName" readonly />
+                            <input type="hidden" id="IdSubjectValue" name="subjectId" value="@ViewBag.Subject.SubjectId" />
+                        </div>
+                        <div class="form-group">
+                            <label for="time">Time (minutes) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="time" name="etime" min="1" max="90" required>
+                            <div class="invalid-feedback">Time is required and must be between 1 and 90 minutes.</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="startDate">Start Date <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control datetimepicker-input" id="startDate" data-toggle="datetimepicker" data-target="#startDate" required />
+                            <div class="invalid-feedback">Start Date is required.</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="endDate">End Date <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control datetimepicker-input" id="endDate" data-toggle="datetimepicker" data-target="#endDate" required />
+                            <div class="invalid-feedback">End Date is required.</div>
+                        </div>
+                        <button type="button" class="btn btn-primary" id="create">Save</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="selectionModal" tabindex="-1" role="dialog" aria-labelledby="selectionModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="selectionModalLabel">Choose Exam Type</h5>
+            </div>
+            <div class="modal-body">
+                <button type="button" class="btn btn-primary" id="newExam">Create New Exam</button>
+                <button type="button" class="btn btn-secondary" id="existingExam">Use System Exam</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tempus-dominus/5.39.0/js/tempus-dominus.min.js" integrity="sha512-QwEC2Er5n6Z7esGHbK/A0sA9F5X9TFDb04Wl4YEdQ1vY+60ZLe4YWILVhGaf0ME1DZbRMCz5D/mTsoICgKaaAA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('#startDate').datetimepicker({
+            format: 'YYYY-MM-DD HH:mm:ss'
+        });
+        $('#endDate').datetimepicker({
+            format: 'YYYY-MM-DD HH:mm:ss'
+        });
+
+        function validateForm() {
+            let isValid = true;
+
+            $('#examForm input[required]').each(function () {
+                if ($(this).val() === '') {
+                    $(this).addClass('is-invalid');
+                    isValid = false;
+                } else {
+                    $(this).removeClass('is-invalid');
+                }
+            });
+
+            return isValid;
+        }
+
+        $("#create").click(function () {
+            if (!validateForm()) {
+                return;
+            }
+
+            var startDate = moment($('#startDate').val(), 'YYYY-MM-DD HH:mm:ss');
+            var endDate = moment($('#endDate').val(), 'YYYY-MM-DD HH:mm:ss');
+
+            if (endDate.isBefore(startDate)) {
+                createToast('Error!', 'End date must be after start date!', 'bg-danger');
+                return;
+            }
+
+            var createdDate = moment();
+            if (endDate.isBefore(createdDate)) {
+                createToast('Error!', 'End date must be after created date!', 'bg-danger');
+                return;
+            }
+
+            var data = {
+                Id: 0,
+                ExamName: $('#name').val(),
+                ClassId: $('#IdClassValue').val(),
+                SubjectId: $('#IdSubjectValue').val(),
+                IsPractice: true,
+                QuestionCount: $('#number').val(),
+                TimeCount: $('#time').val(),
+                CreatedDate: startDate.format('YYYY-MM-DD HH:mm:ss'),
+                EndDate: endDate.format('YYYY-MM-DD HH:mm:ss')
+            };
+
+            var data2 = {
+                existingExamId: $('#existingExamSelect').val(),
+                ExamName: $('#existingExamSelect option:selected').text(),
+                ClassId: $('#IdClassValue').val(),
+                SubjectId: $('#IdSubjectValue').val(),
+                TimeCount: $('#time').val(),
+                CreatedDate: startDate.format('YYYY-MM-DD HH:mm:ss'),
+                EndDate: endDate.format('YYYY-MM-DD HH:mm:ss')
+            };
+
+            var ajaxData = $('#existingExamSelect').length > 0 ? data2 : data;
+
+            $.ajax({
+                type: 'POST',
+                url: $('#existingExamSelect').length > 0 ? '/Home/AddExistingTest' : 'Create',
+                data: JSON.stringify(ajaxData),
+                contentType: 'application/json',
+                success: function (response) {
+                    if (response === '-1') {
+                        createToast('Error!', 'An error occurred!', 'bg-danger');
+                    } else {
+                        createToast('Notification!', 'Success!', 'bg-success');
+                        window.location.replace($('#existingExamSelect').length > 0 ? "@Url.Action("Exam", "Home")" : "ListQuestion?id=" + response);
+                    }
+                },
+                error: function (data) {
+                    console.log(data);
+                }
+            });
+        });
+
+        $('#selectionModal').modal('show');
+
+        $('#newExam').click(function () {
+            $('#selectionModal').modal('hide');
+        });
+
+        $('#existingExam').click(function () {
+            $('#examNameGroup').html(`
+                            <label for="existingExamSelect">Select Existing Exam <span class="text-danger">*</span></label>
+                            <select class="form-control" id="existingExamSelect" name="existingExamId" required>
+                                <option value="" disabled selected>Select Exam</option>
+    @foreach (var exam in ViewBag.ExamManager)
+    {
+                                               <option value="@exam.ExamId">@exam.ExamName</option>
+    }
+                            </select>
+                        `);
+            $('#selectionModal').modal('hide');
+        });
+
+        function createToast(title, body, className) {
+            $(document).Toasts('create', {
+                icon: 'fas fa-exclamation-triangle',
+                position: 'bottomRight',
+                class: `${className} m-1`,
+                autohide: true,
+                delay: 2000,
+                title: title,
+                body: body
+            });
+        }
+    });
+</script>

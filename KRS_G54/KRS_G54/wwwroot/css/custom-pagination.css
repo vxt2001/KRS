@@ -1,0 +1,29 @@
+﻿.pagination {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+    .pagination a,
+    .pagination span {
+        color: #333;
+        text-decoration: none;
+        transition: background-color 0.3s, color 0.3s, transform 0.3s;
+        /*margin: 0 5px;*/
+        padding: 10px 15px;
+        border: 2px solid transparent;
+        border-radius: 5px; /* Border-radius set to 5px for rounded corners */
+        font-size: 16px;
+    }
+
+        .pagination a:hover {
+            background-color: #f0f0f0;
+            transform: translateY(-2px); /* Adds a subtle upward lift effect on hover */
+        }
+
+    .pagination .active,
+    .pagination span {
+        background-color: #007bff;
+        color: #ffffff;
+        border-color: #007bff;
+    }

@@ -1,0 +1,43 @@
+﻿@model IEnumerable<KRS_G54.Models.AnswerOption>
+
+@{
+    ViewData["Title"] = "Edit Answer Options";
+    Layout = "/Areas/Manager/Views/Shared/_Layout.cshtml";
+}
+
+<a>@Html.Raw(@Model.First().ExamKnowledge.Knowledge.Replace("\n", "<br>"))</a>
+
+<form asp-action="Edit" method="post">
+    @for (int i = 0; i < Model.Count(); i++)
+    {
+        var answerOption = Model.ElementAt(i);
+        <input type="hidden" name="answerOptions[@i].ExamKnowledgeId" value="@answerOption.ExamKnowledgeId" />
+        <input type="hidden" name="answerOptions[@i].AnswerOptionId" value="@answerOption.AnswerOptionId" />
+    }
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Option</th>
+                <th>Is Key</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (int i = 0; i < Model.Count(); i++)
+            {
+                var answerOption = Model.ElementAt(i);
+                <tr>
+                    <td>
+                        <input type="text" name="answerOptions[@i].AnswerOption1" value="@answerOption.AnswerOption1" class="form-control" />
+                    </td>
+                    <td>
+                    
+                      <input type="checkbox" name="answerOptions[@i].IsKey" value="true" @(answerOption.IsKey.HasValue && answerOption.IsKey.Value == true ? "checked" : "") />
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <button type="submit" class="btn btn-primary">Save Answer Options</button>
+</form>

@@ -1,0 +1,141 @@
+﻿@model List<KRS_G54.Models.Knowledge>;
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var subjects = ViewBag.SubjectList as List<Subject>;
+}
+<div class="container">
+    <h1>Create Your Practical Exam</h1>
+    <div id="container">
+        <div class="form-group">
+            <label for="exam-name">Exam Name:</label>
+            <input type="text" class="exam-name-input" name="exam-name">
+            <br>
+            <label for="subject">Choose your subject:</label>
+            <select class="subject-select" name="subjects[]" onchange="updateMaxQuestions()">
+                <option value="">Choose one</option>
+                @foreach (var subject in subjects)
+                {
+                    <option value="@subject.SubjectId">@subject.SubjectName</option>
+                }   
+            </select>
+            <br>
+            <label for="num-questions">Number of Questions:</label>
+            <input type="number" class="num-questions-input" name="num-questions[]" min="1" value="1" max="60">
+            <br>
+            <button class="add-to-quiz-btn" type="button">Add to Exam</button>
+        </div>
+    </div>
+
+    <div id="quiz-summary">
+        <h2>Test</h2>
+        <table id="quiz-table">
+            <thead>
+                <tr>
+                    <th>Subject</th>
+                    <th>Number of Questions</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Data about added subjects will be displayed here -->
+            </tbody>
+        </table>
+    </div>
+    <button class="submit-btn" type="button" onclick="window.location.href = 'ExamList';">Submit</button>
+
+</div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    function updateMaxQuestions() {
+        var selectedSubjectId = document.querySelector('.subject-select').value;
+        fetch(`/api/subject/${selectedSubjectId}/knowledgeCount`)
+            .then(response => response.json())
+            .then(knowledgeCount => {
+                var numQuestionsInput = document.querySelector('.num-questions-input');
+                numQuestionsInput.max = knowledgeCount;
+            })
+            .catch(error => {
+                console.error('Error fetching knowledge count:', error);
+            });
+    }
+    $(document).ready(function () {
+        var quizData = []; // Initialize an empty array to store quiz data
+        var examName = ""; // Initialize examName variable
+
+        $(".add-to-quiz-btn").click(function () {
+            var subject = $(this).siblings('.subject-select').val();
+            var subjectName = $(this).siblings('.subject-select').find('option:selected').text();
+            var numQuestions = $(this).siblings('.num-questions-input').val();
+
+            if (subject) {
+                var exists = false;
+                $('#quiz-table tbody tr').each(function () {
+                    var existingSubject = $(this).find('td:first').text();
+                    if (existingSubject === subjectName) {
+                        exists = true;
+                        return false;
+                    }
+                });
+
+                if (!exists) {
+                    // Add subject data to the quizData array
+                    quizData.push({ subjectName: subjectName, numQuestions: numQuestions });
+
+                    // Update the HTML table
+                    $("#quiz-table tbody").append("<tr><td>" + subjectName + "</td><td>" + numQuestions + "</td><td><button class='remove-subject-btn' type='button'>X</button></td></tr>");
+                } else {
+                    alert("Môn học đã tồn tại trong danh sách bài kiểm tra.");
+                }
+
+                $(this).siblings('.subject-select').val('');
+                $(this).siblings('.num-questions-input').val('1');
+            } else {
+                alert("Vui lòng chọn một môn học trước khi thêm vào bài kiểm tra.");
+            }
+        });
+
+        $(document).on('click', '.remove-subject-btn', function () {
+            var subjectName = $(this).closest('tr').find('td:first').text();
+            // Remove the subject data from the quizData array
+            quizData = quizData.filter(function (item) {
+                return item.subjectName !== subjectName;
+            });
+            $(this).closest('tr').remove();
+        });
+
+        // Function to get quiz data
+        function getQuizData() {
+            return quizData;
+        }
+
+        // Check if quizData is populated
+        function isQuizDataPopulated() {
+            return quizData.length > 0;
+        }
+
+        $(".submit-btn").click(function () {
+            var examName = $(".exam-name-input").val();
+            if (examName && isQuizDataPopulated()) { // Check if exam name and quiz data are provided
+                $.ajax({
+                    url: '/Exam/SubmitQuizData', // Replace ControllerName and ActionName with your actual controller and action names
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ examName: examName, quizData: quizData }),
+                    success: function (response) {
+                        // Handle success response from the server
+                    },
+                    error: function (xhr, textStatus, errorThrown) {
+                        // Handle error
+                        console.error('Error:', errorThrown);
+                    }
+                });
+            } else {
+                alert("Vui lòng nhập tên bài kiểm tra và thêm thông tin bài kiểm tra trước khi tiếp tục.");
+            }
+        });
+    });
+
+</script>
+
+
+

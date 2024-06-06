@@ -1,0 +1,178 @@
+﻿@model KRS_G54.Models.Knowledge
+
+@{
+    ViewData["Title"] = "Learn";
+
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learn</title>
+    <style>
+        .abc {
+            max-width: 800px;
+            margin: 20px auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: normal; /* Để chắc chắn rằng font-weight là mặc định */
+            line-height: 1.5; /* Điều chỉnh chiều cao dòng cho chữ tiếng Việt */
+        }
+
+        p {
+            color: #666;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        form {
+            text-align: center;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            box-sizing: border-box;
+        }
+
+        button[type="submit"] {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+            button[type="submit"]:hover {
+                background-color: #0056b3;
+            }
+
+        /* Modal container */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        /* Modal content */
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+            .close:hover,
+            .close:focus {
+                color: black;
+                text-decoration: none;
+            }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="post-extra text-right">
+            <a href="@Url.Action("GetKnowledge", "Knowledge", new { flashcardId = Model.FlashcardId })" class="btn btn-danger btn-sm mr-3">&larr;</a>
+        </div>
+        <div class="abc">
+            <h1>@Html.Raw(@Model.Knowledge1.Replace("\n", "<br>"))</h1>
+
+            <form id="quizForm" method="post" action="/Knowledge/CheckAnswer">
+                <input type="hidden" name="knowledgeId" value="@Model.KnowledgeId" />
+                <input type="hidden" name="flashcardId" value="@Model.FlashcardId" /> <!-- Add flashcardId as hidden input -->
+                <label for="userAnswer">Your Answer:</label>
+                <input type="text" id="userAnswer" name="userAnswer" required />
+
+                
+                @if (ViewBag.ErrorMessage != null)
+                {
+                    <p style="color: red;">@ViewBag.ErrorMessage</p>
+                }
+                @if (ViewBag.UserAnswer != null)
+                {
+                    <p>Your Answer: @ViewBag.UserAnswer</p>
+                }
+                @if (ViewBag.CorrectAnswer != null)
+                {
+                    <p>Correct Answer: @ViewBag.CorrectAnswer</p>
+                }
+
+                <button type="submit">Submit</button>
+
+            </form>
+        </div>
+    </div>
+    <!-- Modal -->
+    <div id="completionModal" class="modal">
+        <div class="modal-content">
+            @*   <span class="close" onclick="closeModal()">&times;</span>*@
+            <h2>Congratulations! You have completed learning.</h2>
+            <button type="button" id="resetLearn">Practice More</button>
+        </div>
+    </div>
+    <script>
+        // JavaScript to show/hide modal
+        window.onload = function() {
+            var message = "@ViewBag.Message";
+            if (message && message.length > 0) {
+                showModal(); // Show modal only if completion message is present
+            }
+        };
+
+        function showModal() {
+            var modal = document.getElementById('completionModal');
+            modal.style.display = 'block';
+        }
+
+        function closeModal() {
+            var modal = document.getElementById('completionModal');
+            modal.style.display = 'none';
+        }
+
+        // Xử lý sự kiện khi nhấn nút "Reset Learn"
+        document.getElementById('resetLearn').addEventListener('click', function() {
+            // Gọi lại hàm TakeQuiz
+            window.location.href = '/Knowledge/TakeQuiz?flashcardId=@Model.FlashcardId';
+        });
+    </script>
+</body>
+</html>
+

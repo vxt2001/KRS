@@ -1,0 +1,379 @@
+﻿@using Microsoft.AspNetCore.Http;
+@using KRS_G54.Models
+@model IEnumerable<KRS_G54.Models.Question>
+@{
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+}
+@{
+    // Lấy danh sách câu trả lời từ ViewBag và chuyển sang List<AnswerOption>
+    var answers = ViewBag.Answers as List<AnswerOption>;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz</title>
+    @if (ViewBag.QuestionTime > 0)
+    {
+        <meta name="question-time" content="@ViewBag.QuestionTime" /> <!-- Thêm meta tag chứa giá trị thời gian -->
+    }
+    <style>
+        .navigation-buttons button.previous-btn,
+        .navigation-buttons button.next-btn {
+            background-color: #555;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+            .navigation-buttons button.previous-btn:hover,
+            .navigation-buttons button.next-btn:hover {
+                background-color: #333;
+            }
+        /* Style cho định dạng bài kiểm tra */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f7f7f7;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 60%;
+            margin: 50px auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        form {
+            text-align: left;
+        }
+
+        .question {
+            margin-bottom: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .options label {
+            display: block;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+
+        input[type="radio"] {
+            margin-right: 10px;
+        }
+
+        input[type="submit"] {
+            display: block;
+            margin: 0 auto;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+            input[type="submit"]:hover {
+                background-color: #45a049;
+            }
+
+        .vertical-nav {
+            position: fixed;
+            left: 0;
+            top: 0;
+            margin-top: 60px;
+            height: 100%;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
+
+            .vertical-nav a {
+                display: block;
+                margin-bottom: 10px;
+                text-decoration: none;
+                color: #333;
+            }
+
+                .vertical-nav a:hover {
+                    background-color: #ccc;
+                }
+
+                .vertical-nav a.question-selected {
+                    opacity: 0.5;
+                }
+
+        .horizontal-nav {
+            display: flex;
+            flex-wrap: wrap; /* Thêm dòng này để quấn các nút */
+            justify-content: flex-start; /* Căn các mục sang trái */
+            margin-bottom: 20px;
+        }
+
+        .question {
+            display: none;
+        }
+
+            .question.active {
+                display: block;
+            }
+
+        .square-btn {
+            display: flex; /* Đổi từ inline-block sang flex */
+            width: 4.5%; /* Sử dụng flex để đảm bảo các nút vừa với chiều rộng dòng */
+            height: 40px; /* Chiều cao các nút */
+            justify-content: center; /* Căn giữa nội dung theo chiều ngang */
+            align-items: center; /* Căn giữa nội dung theo chiều dọc */
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-right: 1%; /* Khoảng cách giữa các nút */
+            text-decoration: none;
+            color: #333;
+            box-sizing: border-box; /* Đảm bảo padding và border không làm tăng chiều rộng và chiều cao thực tế */
+        }
+
+            .square-btn:hover {
+                background-color: #f0f0f0;
+            }
+
+            .square-btn.checked {
+                opacity: 0.5;
+            }
+
+        .horizontal-nav a.question-selected {
+            opacity: 0.5;
+        }
+
+        .timer-submit-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .container {
+            width: 150%;
+            margin: 50px auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>@ViewBag.ExamName</h1>
+        <div style="position: relative;">
+            <div class="timer-submit-container">
+                @if (ViewBag.QuestionTime > 0)
+                {
+                    <h2 id="timer">Time Left: @ViewBag.QuestionTime</h2> <!-- Hiển thị thời gian -->
+                }
+            </div>
+            <nav class="horizontal-nav">
+                @{
+                    int questionNumb = 1;
+                    foreach (Question question in ViewBag.Questions)
+                    {
+                        <a href="#" class="square-btn" data-question-id="@question.ExamKnowledgeId">
+                            <span>@questionNumb</span>
+                        </a>
+                        questionNumb++;
+                    }
+                }
+            </nav>
+        </div>
+        @if (ViewBag.QuestionCount > 0)
+        {
+            <form id="quizForm" asp-action="SubmitExam" asp-controller="Home" method="post">
+                <input type="hidden" name="examID" value="@ViewBag.ExamID">
+                @{
+                    var questionNumber = 1;
+                }
+                @foreach (var question in ViewBag.Questions)
+                {
+                    <div class="question @(questionNumber == 1 ? "active" : "")" id="question_@question.ExamKnowledgeId">
+                        <p><strong>Question @questionNumber:</strong> @question.ExamKnowledge.Knowledge</p>
+                        <div class="options">
+                            @{
+                                var questionAnswers = answers.Where(a => a.ExamKnowledgeId == question.ExamKnowledgeId);
+                                var keyCount = ViewBag.KeyCounts[question.ExamKnowledgeId];
+                            }
+                            @if (keyCount >= 2)
+                            {
+                                foreach (var answer in questionAnswers)
+                                {
+                                    <label>
+                                        <input type="checkbox"
+                                               name="selectedAnswers[@questionNumber][]"
+                                               value="@answer.AnswerOptionId"
+                                               data-question-id="@question.ExamKnowledgeId">
+                                        @answer.AnswerOption1
+                                    </label>
+                                }
+                                <input type="hidden" name="selectedAnswers[@questionNumber][]" value="0">
+                            }
+                            else
+                            {
+                                foreach (var answer in questionAnswers)
+                                {
+                                    <label>
+                                        <input type="radio"
+                                               name="selectedAnswers[@questionNumber][]"
+                                               value="@answer.AnswerOptionId"
+                                               data-question-id="@question.ExamKnowledgeId">
+                                        @answer.AnswerOption1
+                                    </label>
+                                }
+                                <input type="hidden" name="selectedAnswers[@questionNumber][]" value="0">
+                            }
+                        </div>
+                        <div class="navigation-buttons">
+                            @if (questionNumber > 1)
+                            {
+                                <button type="button" class="previous-btn">Previous</button>
+                            }
+                            @if (questionNumber < ViewBag.QuestionCount)
+                            {
+                                <button type="button" class="next-btn">Next</button>
+                            }
+                        </div>
+                    </div>
+                    questionNumber++;
+                }
+                <input type="hidden" id="remainingTimeInput" name="remainingTime" value="">
+                <input type="submit" form="quizForm" value="Submit"> <!-- Add the form attribute -->
+            </form>
+        }
+        else
+        {
+            <p>No questions available for this exam.</p>
+        }
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var navLinks = document.querySelectorAll('.horizontal-nav a');
+            navLinks.forEach(function (link) {
+                link.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    var questionId = this.getAttribute('data-question-id');
+                    var question = document.getElementById('question_' + questionId);
+                    var allQuestions = document.querySelectorAll('.question');
+                    allQuestions.forEach(function (q) {
+                        q.classList.remove('active');
+                    });
+                    question.classList.add('active');
+                });
+            });
+            var previousButtons = document.querySelectorAll('.previous-btn');
+            var nextButtons = document.querySelectorAll('.next-btn');
+            previousButtons.forEach(function (button) {
+                button.addEventListener('click', function () {
+                    var currentQuestion = document.querySelector('.question.active');
+                    var prevQuestion = currentQuestion.previousElementSibling;
+                    if (prevQuestion && prevQuestion.classList.contains('question')) {
+                        currentQuestion.classList.remove('active');
+                        prevQuestion.classList.add('active');
+                    }
+                });
+            });
+
+            nextButtons.forEach(function (button) {
+                button.addEventListener('click', function () {
+                    var currentQuestion = document.querySelector('.question.active');
+                    var nextQuestion = currentQuestion.nextElementSibling;
+                    if (nextQuestion && nextQuestion.classList.contains('question')) {
+                        currentQuestion.classList.remove('active');
+                        nextQuestion.classList.add('active');
+                    }
+                });
+            });
+            var lastClickedInput = null;
+            var lastSelectedQuestionNavItem = null;
+            var inputs = document.querySelectorAll('input[type="radio"], input[type="checkbox"]');
+            inputs.forEach(function (input) {
+                input.addEventListener('click', function () {
+                    if (!lastClickedInput || lastClickedInput !== this) {
+                        this.checked = true;
+                        lastClickedInput = this;
+                        updateQuestionSelection();
+                    } else {
+                        this.checked = false;
+                        lastClickedInput = null;
+                        removeQuestionSelection();
+                    }
+                });
+
+                input.addEventListener('change', function () {
+                    if (this.checked) {
+                        updateQuestionSelection();
+                    } else {
+                        removeQuestionSelection();
+                    }
+                });
+            });
+
+            function updateQuestionSelection() {
+                var questionNumber = parseInt(lastClickedInput.name.match(/\d+/)[0]);
+                var questionNavItem = document.querySelectorAll('.horizontal-nav a')[questionNumber - 1];
+
+                if (questionNavItem) {
+                    questionNavItem.classList.add('question-selected');
+                    lastSelectedQuestionNavItem = questionNavItem;
+                } else {
+                    console.log('Question navigation item not found');
+                    console.log('Question number:', questionNumber);
+                    console.log('All navigation items:', document.querySelectorAll('.horizontal-nav a'));
+                }
+            }
+
+            function removeQuestionSelection() {
+                if (lastSelectedQuestionNavItem) {
+                    lastSelectedQuestionNavItem.classList.remove('question-selected');
+                }
+            }
+        });
+        var questionTime = parseInt(document.querySelector('meta[name="question-time"]').getAttribute('content'));
+        var startTime = new Date();
+        var endTime = new Date(startTime.getTime() + (questionTime * 60 * 1000));
+        var remainingTime; // Tạo biến để lưu trữ thời gian còn lại
+
+        function updateTimer() {
+            var now = new Date();
+            var timeLeft = Math.max((endTime - now) / 1000, 0);
+            var remainingMinutes = Math.floor(timeLeft / 60); // Lấy số phút còn lại
+            var remainingSeconds = Math.floor(timeLeft % 60); // Lấy số giây còn lại
+            remainingTime = { minutes: remainingMinutes, seconds: remainingSeconds }; // Lưu cả hai giá trị vào biến remainingTime
+
+            var minutes = Math.floor(timeLeft / 60);
+            var seconds = Math.floor(timeLeft % 60);
+            document.getElementById('timer').innerText = 'Time Left: ' + (minutes < 10 ? '0' : '') + minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
+            document.getElementById('remainingTimeInput').value = JSON.stringify(remainingTime); // Lưu cả phút và giây vào trường ẩn dưới dạng JSON
+            if (timeLeft <= 0) {
+                clearInterval(timeInterval);
+                document.querySelector('form').submit();
+            }
+        }
+        var timeInterval = setInterval(updateTimer, 1000);
+
+    </script>
+</body>
+</html>

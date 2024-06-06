@@ -1,0 +1,162 @@
+﻿@using KRS_G54.Models;
+@using X.PagedList;
+@model IPagedList<KRS_G54.Models.Class>
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@addTagHelper *, AuthoringTagHelpers
+@{
+    ViewData["Title"] = "Admin Page";
+    Layout = "/Areas/Manager/Views/Shared/_Layout.cshtml";
+}
+<style>
+    ::-webkit-scrollbar {
+        width: 12px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 10px;
+    }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+    .select-with-scroll {
+        overflow-y: auto;
+        max-height: 200px;
+    }
+</style>
+<h1>Class Management</h1>
+<div class="container" style="margin:0px">
+    <div class="row" style="display:inline-flex;justify-content:space-around;align-items: center;">
+        <div class="col">
+            <div class="dropdown">
+                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Filter by Status...
+                </button>
+                <div class="dropdown-menu select-with-scroll" aria-labelledby="dropdownSortButton">
+                    <a class="dropdown-item" href="@Url.Action("FilterByStatus", new { status = (bool?)null })">All</a>
+                    <a class="dropdown-item" href="@Url.Action("FilterByStatus", new { status = true })">Active</a>
+                    <a class="dropdown-item" href="@Url.Action("FilterByStatus", new { status = false })">Inactive</a>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="dropdown">
+                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Filter by Subject...
+                </button>
+                <div class="dropdown-menu select-with-scroll" aria-labelledby="dropdownSortButton">
+                    <a class="dropdown-item" href="@Url.Action("FilterBySubject", "Class", new { subjectId = (int?)null })">All</a>
+                    @foreach (Subject item in ViewBag.Subjects)
+                    {
+                        <a class="dropdown-item" href="@Url.Action("FilterBySubject", "Class", new { subjectId = item.SubjectId })">@item.SubjectName</a>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="dropdown">
+                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Filter by Semester...
+                </button>
+                <div class="dropdown-menu select-with-scroll" aria-labelledby="dropdownSortButton">
+                    <a class="dropdown-item" href="@Url.Action("FilterBySemester", "Class", new { semesterId = (int?)null })">All</a>
+                    @foreach (Semester item in ViewBag.Semesters)
+                    {
+                        <a class="dropdown-item" href="@Url.Action("FilterBySemester", "Class", new { semesterId = item.SemesterId })">@item.SemesterName</a>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <form asp-controller="Class" asp-action="Search" method="get">
+                <div class="input-group">
+                    <input type="text" name="searchString" class="form-control" placeholder="Search..." value="@ViewBag.SearchString">
+                    <div class="input-group-append">
+                        <button type="submit" class="btn btn-primary">Search</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Class Name  <a href="@Url.Action("SortByName", new { sortOrder = "asc" })"><span class="arrow-up"></span></a>  <a href="@Url.Action("SortByName", new { sortOrder = "desc" })"><span class="arrow-down"></span></a></th>
+            <th>Subject Code</th>
+            <th>Subject</th>
+            <th>Size</th>
+            <th>Semester</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+
+                <td>@item.ClassName</td>
+                <td>
+                    @item.Subject.SubjectCode
+                </td>
+                <td>
+                        @item.Subject.SubjectName
+                </td>
+
+                <td>
+                        @item.Capacity
+                </td>
+                <td>
+                        @item.Semester.SemesterName
+                </td>
+                <td>@(item.Status.HasValue && item.Status.Value ? "Activate" : "Deactivate")</td>
+                <td>
+                    <form method="post" asp-action="UpdateStatus">
+                        <input type="hidden" name="Id" value="@item.ClassId" />
+                        <div class="d-flex align-items-center">
+                                @if (item.Status.HasValue && item.Status.Value)
+                                {
+                                <button type="submit" class="btn btn-warning fixed-size-button" style="margin-right:10px" onclick="return confirm('Are you sure to Inactive this ?')">
+                                    Deactivate
+                                </button>
+                                }
+                                else
+                                {
+                                <button type="submit" class="btn btn-success fixed-size-button" style="margin-right:10px" onclick="return confirm('Are you sure to Active this ?')">
+                                    Activate
+                                </button>
+                                }
+                                @Html.ActionLink("Add Student", "AddUser", new { classId = item.ClassId }, new {@class = "btn btn-success mr-2"})
+                                @Html.ActionLink("Details", "Detail", new {Id = item.ClassId},new {@class = "btn btn-success mr-2"})
+                                @Html.ActionLink("Edit", "Edit", new {Id = item.ClassId}, new {@class = "btn btn-success"})
+                        </div>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+<div class="text-center">
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
+                <a class="page-link" href="@Url.Action("Index", new { page = Model.PageNumber - 1 })" tabindex="-1" style="background-color: transparent;border: none;">⬅️</a>
+            </li>
+            @for (var i = 1; i <= Model.PageCount; i++)
+            {
+                <li class="page-item @(i == Model.PageNumber ? "active" : "")">
+                    <a class="page-link" href="@Url.Action("Index", new { page = i })">@i</a>
+                </li>
+            }
+            <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
+                <a class="page-link" href="@Url.Action("Index", new { page = Model.PageNumber + 1 })" style="background-color: transparent;border: none;">➡️</a>
+            </li>
+        </ul>
+    </nav>
+</div>

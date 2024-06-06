@@ -1,0 +1,346 @@
+﻿@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@addTagHelper *, AuthoringTagHelpers<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>KRS | Manager Dashboard</title>
+
+    <!-- Google Font: Source Sans Pro -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+    <link href="https://fonts.googleapis.com/css?family=Poppins:300,400" rel="stylesheet" />
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- Ionicons -->
+    <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <!-- Tempusdominus Bootstrap 4 -->
+    <link rel="stylesheet" href="~/plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css">
+    <!-- iCheck -->
+    <link rel="stylesheet" href="~/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
+    <!-- JQVMap -->
+    <link rel="stylesheet" href="~/plugins/jqvmap/jqvmap.min.css">
+    <!-- Theme style -->
+    <link rel="stylesheet" href="~/dist/css/adminlte.min.css">
+    <!-- overlayScrollbars -->
+    <link rel="stylesheet" href="~/plugins/overlayScrollbars/css/OverlayScrollbars.min.css">
+    <!-- Daterange picker -->
+    <link rel="stylesheet" href="~/plugins/daterangepicker/daterangepicker.css">
+    <!-- summernote -->
+
+    <link rel="stylesheet" href="~/plugins/summernote/summernote-bs4.min.css">
+    <link href="~/searchBar/css/main.css" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/dashboard.css">
+    <script src="https://cdn.ckeditor.com/ckeditor5/41.3.1/classic/ckeditor.js"></script>
+    <style>
+        h1 {
+            margin-top: 0;
+        }
+
+        .ck-editor__editable[role="textbox"] {
+            /* Editing area */
+            min-height: 200px;
+        }
+
+        .fixed-size-button {
+            flex: 0 0 80px;
+        }
+
+       
+        .arrow-up::after {
+            content: "↑";
+        }
+
+        .arrow-down::after {
+            content: "↓";
+        }
+
+        .custom-control-input:checked + .custom-control-label::before {
+            background-color: #28a745;
+        }
+
+        .custom-control-input:checked + .custom-control-label::after {
+            background-color: #fff;
+        }
+
+        .ttr-header-submenu {
+            display: none; /* Ẩn submenu mặc định */
+        }
+
+            .ttr-header-submenu.active {
+                display: block; /* Hiển thị submenu khi có lớp active */
+            }
+    </style>
+    
+    
+
+</head>
+<body class="hold-transition sidebar-mini layout-fixed">
+    <div class="wrapper">
+
+        <!-- Preloader -->
+        <div class="preloader flex-column justify-content-center align-items-center">
+            <img class="animation__shake" src="~/assets/images/logo-white-2.png" alt="AdminLTELogo" height="60" width="60">
+        </div>
+
+        <!-- Navbar -->
+        <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+            <!-- Left navbar links -->
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
+                </li>
+            </ul>
+            <ul class="navbar-nav ttr-header-navigation ml-auto">
+                <!-- Navbar Search -->
+                <!-- Messages Dropdown Menu -->
+                <!-- Notifications Dropdown Menu -->
+
+
+                <li style="margin-right:10px">
+                    <a href="#" class="ttr-material-button ttr-submenu-toggle"><span class="ttr-user-avatar"><img alt="" src="~/images/profile/@Context.Session.GetString("profilePicture")" width="32" height="32"></span></a>
+                    <div class="ttr-header-submenu" style="display: block;">
+                        <ul>
+                            <li><a asp-area="" asp-action="EditProfile" asp-controller="User">Profile</a></li>
+                            <li><a asp-area="" asp-action="Logout" asp-controller="User">Logout</a></li>
+                        </ul>
+                    </div>
+                </li>
+            </ul>
+            <!-- Right navbar links -->
+
+        </nav>
+        <!-- /.navbar -->
+        <!-- Main Sidebar Container -->
+        <aside class="main-sidebar sidebar-dark-primary elevation-4">
+            <!-- Brand Logo -->
+           
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <!-- Sidebar user panel (optional) -->
+                <div class="user-panel mt-3 pb-3 mb-3 d-flex">
+                    <div class="image">
+                        <img src="~/images/logo-white-2.png" class="img-circle elevation-2" alt="User Image">
+                    </div>
+
+                    <div class="info">
+                        <a href="@Url.Action("ListSubject","Knowledge", new { area = ""})" class="d-block">Admin</a>
+                    </div>
+
+                </div>
+
+                <!-- SidebarSearch Form -->
+                <!-- Sidebar Menu -->
+                <nav class="mt-2">
+                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="nav-icon fas fa-tachometer-alt"></i>
+                                <p>
+                                    Role
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="@Url.Action("ListRole","Role", new {area="Admin"})" class="nav-link active">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>List Role</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="@Url.Action("Create","Role", new {area="Admin"})" class="nav-link active">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Add new Role</p>
+                                    </a>
+                                </li>
+                            </ul>
+
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="nav-icon fas fa-tachometer-alt"></i>
+                                <p>
+                                    User
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="@Url.Action("ListUser","User", new {area="Admin"})" class="nav-link active">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>List User</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="@Url.Action("Create","User", new {area="Admin"})" class="nav-link active">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Add New User</p>
+                                    </a>
+                                </li>
+                            </ul>
+
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="nav-icon fas fa-tachometer-alt"></i>
+                                <p>
+                                    Subject
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="@Url.Action("Index","Subject", new {area="Admin"})" class="nav-link active">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>List Subject</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="@Url.Action("Create","Subject", new {area="Admin"})" class="nav-link active">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Add new Subject</p>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="nav-icon fas fa-tachometer-alt"></i>
+                                <p>
+                                    Semester
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="@Url.Action("Index","Semester", new {area="Admin"})" class="nav-link active">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>List Semester</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="@Url.Action("Create","Semester", new {area="Admin"})" class="nav-link active">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Add new Semester</p>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </nav>
+                <!-- /.sidebar-menu -->
+            </div>
+            <!-- /.sidebar -->
+        </aside>
+
+        <!-- Content Wrapper. Contains page content -->
+        <div class="content-wrapper" style="margin-top:0px">
+            @RenderBody()
+        </div>
+
+
+
+        <!-- /.content-wrapper -->
+        <!-- Control Sidebar -->
+        <aside class="control-sidebar control-sidebar-dark">
+            <!-- Control sidebar content goes here -->
+        </aside>
+        <!-- /.control-sidebar -->
+    </div>
+    <!-- ./wrapper -->
+    <!-- jQuery -->
+    <script>
+        var btnDelete = document.getElementById('clear');
+        var inputFocus = document.getElementById('inputFocus');
+        //- btnDelete.on('click', function(e) {
+        //-   e.preventDefault();
+        //-   inputFocus.classList.add('isFocus')
+        //- })
+        //- inputFocus.addEventListener('click', function() {
+        //-   this.classList.add('isFocus')
+        //- })
+        btnDelete.addEventListener('click', function (e) {
+            e.preventDefault();
+            inputFocus.value = ''
+        })
+        document.addEventListener('click', function (e) {
+            if (document.getElementById('first').contains(e.target)) {
+                inputFocus.classList.add('isFocus')
+            }
+            else {
+                // Clicked outside the box
+                inputFocus.classList.remove('isFocus')
+            }
+        });
+
+    </script>
+    <script src="~/plugins/jquery/jquery.min.js"></script>
+    <!-- jQuery UI 1.11.4 -->
+    <script src="~/plugins/jquery-ui/jquery-ui.min.js"></script>
+    <!-- Resolve conflict in jQuery UI tooltip with Bootstrap tooltip -->
+    <script>
+        $.widget.bridge('uibutton', $.ui.button)
+    </script>
+    <!-- Bootstrap 4 -->
+    <script src="~/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <!-- ChartJS -->
+    <script src="~/plugins/chart.js/Chart.min.js"></script>
+    <!-- Sparkline -->
+    <script src="~/plugins/sparklines/sparkline.js"></script>
+    <!-- JQVMap -->
+    <script src="~/plugins/jqvmap/jquery.vmap.min.js"></script>
+    <script src="~/plugins/jqvmap/maps/jquery.vmap.usa.js"></script>
+    <!-- jQuery Knob Chart -->
+    <script src="~/plugins/jquery-knob/jquery.knob.min.js"></script>
+    <!-- daterangepicker -->
+    <script src="~/plugins/moment/moment.min.js"></script>
+    <script src="~/plugins/daterangepicker/daterangepicker.js"></script>
+    <!-- Tempusdominus Bootstrap 4 -->
+    <script src="~/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js"></script>
+    <!-- Summernote -->
+    <script src="~/plugins/summernote/summernote-bs4.min.js"></script>
+    <!-- overlayScrollbars -->
+    <script src="~/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js"></script>
+    <!-- AdminLTE App -->
+    <script src="~/dist/js/adminlte.js"></script>
+
+    <!-- AdminLTE for demo purposes -->
+
+    <!-- AdminLTE dashboard demo (This is only for demo purposes) -->
+    <script src="~/js/signalr/dist/browser/signalr.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/dist/js/pages/dashboard.js"></script>
+    <script>
+        ClassicEditor
+            .create(document.querySelector('#description'))
+            .catch(error => {
+                console.error(error);
+            });
+    </script>
+    <script>
+        document.getElementById('toggleStatus').addEventListener('change', function () {
+            var label = document.getElementById('toggleLabel');
+            if (this.checked) {
+                label.textContent = 'Activate';
+            } else {
+                label.textContent = 'Deactivate';
+            }
+        });
+
+    </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            var submenuToggle = document.querySelector(".ttr-submenu-toggle");
+            var submenu = document.querySelector(".ttr-header-submenu");
+
+            submenuToggle.addEventListener("click", function (event) {
+                event.preventDefault();
+                submenu.classList.toggle("active");
+            });
+        });
+    </script>
+</body>
+</html>

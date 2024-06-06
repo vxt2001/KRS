@@ -1,0 +1,241 @@
+﻿@using Microsoft.AspNetCore.Http;
+@using KRS_G54.Models;
+@model List<KRS_G54.Models.UserQuestion>
+@{
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+}
+@{
+    var answers = ViewBag.Answers as List<AnswerOption>;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Result</title>
+    <style>
+        .navigation-buttons button.previous-btn,
+        .navigation-buttons button.next-btn {
+            background-color: #555;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+            .navigation-buttons button.previous-btn:hover,
+            .navigation-buttons button.next-btn:hover {
+                background-color: #333;
+            }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f7f7f7;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 80%;
+            margin: 50px auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        form {
+            text-align: left;
+        }
+
+        .question {
+            margin-bottom: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .options label {
+            display: block;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+
+        input[type="radio"], input[type="checkbox"] {
+            margin-right: 10px;
+        }
+
+        input[type="submit"] {
+            display: block;
+            margin: 0 auto;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+            input[type="submit"]:hover {
+                background-color: #45a049;
+            }
+
+        .horizontal-nav {
+            display: grid;
+            grid-template-columns: repeat(20, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .question {
+            display: none;
+        }
+
+            .question.active {
+                display: block;
+            }
+
+        .square-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            margin: 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            text-decoration: none;
+            color: #333;
+            box-sizing: border-box;
+        }
+
+            .square-btn:hover {
+                background-color: #f0f0f0;
+            }
+
+            .square-btn span {
+                display: inline-block;
+            }
+
+            .square-btn.checked {
+                opacity: 0.5;
+            }
+
+        .navigation-buttons {
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Quiz Result</h1>
+        <a href="@Url.Action("ExamList", "Exam")" class="return-btn">← Return to exam list</a>
+        <nav class="horizontal-nav">
+            @{
+                int questionNumb = 1;
+                foreach (UserQuestion question in ViewBag.Questions)
+                {
+                    <a href="#question_@question.ExamKnowledgeId" class="square-btn">@questionNumb</a>
+                    questionNumb++;
+                }
+            }
+        </nav>
+        @{
+            int questionNumber = 1;
+            var selectedAnswers = ViewBag.SelectedAnswerValues as List<List<int>>;
+        }
+        @foreach (UserQuestion question in ViewBag.Questions)
+        {
+            <div class="question @(questionNumber == 1 ? "active" : "")" id="question_@question.ExamKnowledgeId">
+                <p><strong>Question @questionNumber:</strong> @question.ExamKnowledge.Knowledge</p>
+                <div class="options">
+                    @{
+                        var questionAnswers = answers.Where(a => a.ExamKnowledgeId == question.ExamKnowledgeId);
+                        List<int> selectedAnswerIds = selectedAnswers != null && questionNumber <= selectedAnswers.Count ? selectedAnswers[questionNumber - 1] : new List<int>();
+                    }
+                    @foreach (AnswerOption answer in questionAnswers)
+                    {
+                        <label>
+                            @if (questionAnswers.Count(a => a.IsKey == true) == 1)
+                            {
+                                <input type="radio" name="selectedAnswers[@questionNumber]" value="@answer.AnswerOptionId" @(selectedAnswerIds.Contains(answer.AnswerOptionId) ? "checked" : "") disabled>
+                            }
+                            else
+                            {
+                                <input type="checkbox" name="selectedAnswers[@questionNumber]" value="@answer.AnswerOptionId" @(selectedAnswerIds.Contains(answer.AnswerOptionId) ? "checked" : "") disabled>
+                            }
+                            @answer.AnswerOption1
+                            @if (selectedAnswerIds.Any())
+                            {
+                                @if (selectedAnswerIds.Contains(answer.AnswerOptionId))
+                                {
+                                    if (answer.IsKey ?? false)
+                                    {
+                                        <span style="color:green; font-weight:bold;">✔</span>
+                                    }
+                                    else
+                                    {
+                                        <span style="color:red; font-weight:bold;">❌</span>
+                                    }
+                                }
+                            }
+                        </label>
+                    }
+                </div>
+                <div class="navigation-buttons">
+                    @if (questionNumber > 1)
+                    {
+                        <button class="previous-btn" onclick="navigateToQuestion(@(questionNumber - 2))">Previous</button>
+                    }
+                    @if (questionNumber < ViewBag.Questions.Count)
+                    {
+                        <button class="next-btn" onclick="navigateToQuestion(@questionNumber)">Next</button>
+                    }
+                </div>
+            </div>
+            questionNumber++;
+        }
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var navLinks = document.querySelectorAll('.horizontal-nav a');
+            var questions = document.querySelectorAll('.question');
+            var currentQuestionIndex = 0;
+
+            function showQuestion(index) {
+                questions.forEach(function (question, i) {
+                    question.style.display = (i === index) ? 'block' : 'none';
+                });
+                currentQuestionIndex = index;
+            }
+
+            navLinks.forEach(function (link, index) {
+                link.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    showQuestion(index);
+                });
+            });
+
+            window.navigateToQuestion = function (index) {
+                if (index >= 0 && index < questions.length) {
+                    showQuestion(index);
+                }
+            };
+
+            showQuestion(0);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,265 @@
+﻿@model IEnumerable<KRS_G54.Models.UserExam>
+@using Microsoft.AspNetCore.Http;
+@using X.PagedList.Mvc.Core;
+@using X.PagedList;
+@using X.PagedList.Web.Common;
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var subjects = ViewBag.SubjectList as List<Subject>;
+}
+<div class="flex-container">
+    <div class="content-wrap">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 d-flex justify-content-center align-items-center">
+                    <p>
+                        <a href="@Url.Action("Add", "Exam")" class="btn btn-primary mr-2">
+                            <i class="fas fa-plus"></i> Create New Practical Exam
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="container">
+            <div class="row">
+                @foreach (var s in Model)
+                {
+                    <div class="col-lg-6 col-md-6 col-sm-12">
+                        <div class="card exam-card">
+                            <div class="card-body">
+                                <h3 class="card-title">
+                                    <a href="@Url.Action("ExamDetail", "Exam", new {Id = s.Ueid})">@s.ExamName</a>
+                                </h3>
+                                <div class="card-text">
+                                    <h5>Question: @s.QuestionCount</h5>
+                                </div>
+                                <button class="btn-delete" data-ueid="@s.Ueid">
+                                    <i class="fas fa-times-circle" style="color: gold;"></i>
+                                </button>
+                                <button class="show-attempts-btn btn btn-secondary mt-2">Show Previous Attempts</button>
+                                <div class="attempts-list hidden">
+                                    @{
+                                        var examResults = ViewBag.ExamResults[s.Ueid] as List<ExamResult>;
+                                    }
+                                    @if (examResults != null && examResults.Any())
+                                    {
+                                        <h5>Previous Attempts:</h5>
+                                        <ul class="previous-attempts">
+                                            @foreach (var result in examResults)
+                                            {
+                                                <li class="attempt">
+                                                    <div class="score">
+                                                        <strong>Score:</strong> @result.Score
+                                                    </div>
+                                                    <div class="completion-time">
+                                                        <strong>Completion Time:</strong><br> @result.CompletionTime
+                                                    </div>
+                                                    <a href="@Url.Action("UEReviewExam", "Exam", new { examID = s.Ueid, examResultId = result.ExamResultId })" class="review-btn">Review</a>
+                                                </li>
+                                            }
+                                        </ul>
+                                    }
+                                    else
+                                    {
+                                        <p class="no-attempts">No previous attempts found.</p>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+            <div class="col-12">
+                @Html.PagedListPager((IPagedList)Model, page => Url.Action("ExamList", new { page }), new PagedListRenderOptions { Display = PagedListDisplayMode.IfNeeded })
+            </div>
+            @if (ViewBag.NoExamFound != null && (bool)ViewBag.NoExamFound)
+            {
+                <div class="col-12 text-center">
+                    <p><strong>No exams found.</strong></p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="overlay" id="overlay"></div>
+
+<div class="confirm-dialog" id="confirm-dialog">
+    <p>Are you sure you want to delete this exam?</p>
+    <button id="btn-confirm-delete">Delete</button>
+    <button id="btn-cancel-delete">Cancel</button>
+</div>
+
+<style>
+    html, body {
+        height: 100%;
+        margin: 0;
+    }
+
+    .flex-container {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+
+    .content-wrap {
+        flex: 1;
+    }
+
+    .exam-card {
+        margin-bottom: 20px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        position: relative;
+    }
+
+    .card-body {
+        padding: 20px;
+    }
+
+    .card-title a {
+        color: #333;
+        text-decoration: none;
+    }
+
+        .card-title a:hover {
+            color: #007bff;
+        }
+
+    .card-text {
+        margin-top: 10px;
+    }
+
+    .btn-delete {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: none;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+    }
+
+    .overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5); /* Màu đen với độ trong suốt */
+        z-index: 9999; /* Z-index lớn hơn bất kỳ phần tử nào khác */
+        display: none; /* Ẩn ban đầu */
+    }
+
+    /* Hộp thoại */
+    .confirm-dialog {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: white;
+        padding: 20px;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        z-index: 10000; /* Z-index cao hơn overlay */
+        display: none; /* Ẩn ban đầu */
+    }
+
+        /* Button */
+        .confirm-dialog button {
+            padding: 8px 20px;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+
+    .attempts-list {
+        margin-top: 10px;
+    }
+
+        .attempts-list.hidden {
+            display: none;
+        }
+
+    .previous-attempts {
+        list-style-type: none;
+        padding: 0;
+    }
+
+    .attempt {
+        display: flex;
+        align-items: center;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .score, .remaining-time, .completion-time {
+        flex-grow: 1;
+        margin-right: 10px;
+    }
+
+    .score, .remaining-time {
+        font-size: 18px;
+    }
+
+    .review-btn {
+        background-color: #28a745;
+        color: #fff;
+        padding: 10px 20px;
+        text-decoration: none;
+        border-radius: 5px;
+    }
+
+        .review-btn:hover {
+            background-color: #218838;
+        }
+</style>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $('.btn-delete').click(function () {
+            var ueid = $(this).data('ueid');
+
+            // Hiển thị overlay và hộp thoại
+            $('#overlay').show();
+            $('#confirm-dialog').show();
+
+            // Xác nhận xóa
+            $('#btn-confirm-delete').click(function () {
+                $.ajax({
+                    url: '/Exam/Delete',
+                    method: 'POST',
+                    data: { ueid: ueid },
+                    success: function (response) {
+                        // Xóa bài kiểm tra khỏi giao diện người dùng
+                        $(this).closest('.col-lg-4').remove();
+                        // Ẩn overlay và hộp thoại
+                        $('#overlay').hide();
+                        $('#confirm-dialog').hide();
+                        // Làm mới trang sau khi xóa
+                        location.reload();
+                    },
+                    error: function (xhr, status, error) {
+                        // Xử lý lỗi nếu có
+                        console.error(error);
+                    }
+                });
+            });
+
+            // Hủy xóa
+            $('#btn-cancel-delete').click(function () {
+                // Ẩn overlay và hộp thoại
+                $('#overlay').hide();
+                $('#confirm-dialog').hide();
+            });
+        });
+
+        $('.show-attempts-btn').click(function () {
+            const attemptsList = $(this).next('.attempts-list');
+            attemptsList.toggleClass('hidden');
+        });
+    });
+</script>

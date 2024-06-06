@@ -1,0 +1,175 @@
+﻿@using Microsoft.AspNetCore.Http;
+@using KRS_G54.Models
+@model List<KRS_G54.Models.Question>
+@{
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+}
+@{
+    // Lấy danh sách câu trả lời từ ViewBag và chuyển sang List<AnswerOption>
+    var answers = ViewBag.Answers as List<AnswerOption>;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz</title>
+    <style>
+        /* Style cho định dạng bài kiểm tra */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f7f7f7;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 60%;
+            margin: 50px auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        form {
+            text-align: left;
+        }
+
+        .question {
+            margin-bottom: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .options label {
+            display: block;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+
+        input[type="radio"] {
+            margin-right: 10px;
+        }
+
+        input[type="submit"] {
+            display: block;
+            margin: 0 auto;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+            input[type="submit"]:hover {
+                background-color: #45a049;
+            }
+
+        .vertical-nav {
+            position: fixed;
+            left: 0;
+            top: 0;
+            margin-top: 60px;
+            height: 100%;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
+
+            .vertical-nav a {
+                display: block;
+                margin-bottom: 10px;
+                text-decoration: none;
+                color: #333;
+            }
+
+                .vertical-nav a:hover {
+                    background-color: #ccc;
+                }
+
+                .vertical-nav a.question-selected {
+                    opacity: 0.5;
+                }
+
+        .button-link {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            text-decoration: none;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+            .button-link:hover {
+                background-color: #0056b3;
+            }
+
+        .btn-truncate {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .exam-result-section {
+            position: sticky;
+            top: 8%; /* Điều chỉnh theo nhu cầu */
+        }
+
+        .navigation-buttons {
+            margin-top: 20px; /* Điều chỉnh khoảng cách giữa kết quả và các nút */
+        }
+    </style>
+</head>
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="exam-result-section p-4 rounded shadow">
+                <div class="result-details mb-4">
+                    <h1 class="text-primary mb-3">Exam Result</h1>
+                    <div class="score-info">
+                        <h3 class="mb-2">Score: <span class="text-success">@ViewBag.Score</span></h3>
+                        <h3 class="mb-0">Remaining Time: <span class="text-info">@ViewBag.FormattedRemainingTime</span></h3>
+                    </div>
+                </div>
+                <div class="navigation-buttons">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <a href="@Url.Action("Index", "Home")"
+                               class="btn btn-primary btn-lg mr-md-4 mb-2 btn-block">
+                                Back To Home Page
+                            </a>
+                            <a href="@Url.Action("ExamDetail", "Home", new { Id = ViewBag.ExamId })"
+                               class="btn btn-primary btn-lg mr-md-4 mb-2 btn-block">
+                                Retake The Exam
+                            </a>
+                            <a href="@Url.Action("Index", "Class", new { Id = ViewBag.ClassId })"
+                               class="btn btn-primary btn-lg mb-2 btn-block">
+                                Back To Class Info
+                            </a>
+                            <a href="@Url.Action("ResultDetail", "Home")"
+                               class="btn btn-primary btn-lg mb-2 btn-block">
+                                Review Exam
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+    </script>
+</html>

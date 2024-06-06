@@ -1,0 +1,93 @@
+﻿@{
+    ViewData["Title"] = "Exam Results";
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>@ViewData["Title"]</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .mt-4 {
+            margin-top: 1.5rem !important;
+        }
+
+        .mb-4 {
+            margin-bottom: 1.5rem !important;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .lead {
+            font-size: 1.25rem;
+        }
+
+        .list-group-item {
+            padding: 1rem;
+            border-color: #dee2e6;
+        }
+
+        .te {
+            font-weight: normal;
+            line-height: 1.5;
+        }
+
+        .text-success {
+            color: #28a745;
+        }
+
+        .text-danger {
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div style="display: flex; flex-direction: column; align-items: center;">
+            <a href="@Url.Action("GetKnowledge", "Knowledge", new { flashcardId = ViewBag.FlashcardId })" class="btn btn-danger btn-sm" style="align-self: flex-start;">&larr;</a>
+        </div>
+        <h2 class="text-center mb-4">Exam Results</h2>
+        <p class="lead" style="text-align: center">You completed the exam. Here are your results:</p>
+
+        <div class="row">
+            <div class="col-md-12">
+                <p class="text-success">Correct Answers: @ViewBag.CorrectCount / @ViewBag.TotalQuestions</p>
+
+                @if (ViewBag.Results != null)
+                {
+                    <ul class="list-group">
+                        @foreach (var result in ViewBag.Results)
+                        {
+                            <li class="list-group-item">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <p class="te">@Html.Raw(@result.Item1.Knowledge1.Replace("\n", "<br>"))</p>
+                                        <p>Your Answer: @result.Item2</p>
+                                    </div>
+                                    <div class="col-md-4 text-right">
+                                        @if (result.Item3)
+                                        {
+                                            <span class="text-success">Correct &#10003;</span> <!-- V mark -->
+                                        }
+                                        else
+                                        {
+                                            <span class="text-danger">Incorrect &#10007;</span> <!-- X mark -->
+                                            <span class="ml-2">Correct Answer: @Html.Raw(@result.Item1.Answer.Replace("\n", "<br>"))</span>
+                                        }
+                                    </div>
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+    </div>
+</body>
+</html>

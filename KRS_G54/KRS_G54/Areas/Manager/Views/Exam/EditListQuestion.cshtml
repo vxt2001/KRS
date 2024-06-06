@@ -1,0 +1,209 @@
+﻿@model KRS_G54.ViewModels.ExamViewModel
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@addTagHelper *, AuthoringTagHelpers
+@{
+    Layout = "/Areas/Manager/Views/Shared/_Layout.cshtml";
+}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-12 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4>Exam Name:</h4>
+                    <div>
+                        <span id="ExamName" class="form-control">@Model.ExamName</span>
+                        <input type="hidden" name="ExamId" value="@Model.ExamId" />
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="question-container">
+                        @{
+                            int i = 1;
+                        }
+                        @foreach (var question in Model.Questions)
+                        {
+                            <div class="question-block mb-4" data-index="@i">
+                                <h5>Question @i:</h5>
+                                <input type="hidden" id="@($"knowledge_{i}_id")" name="@($"knowledge_{i}_id")" value="@question.KnowledgeId" />
+                                <input type="text" id="@($"knowledge_{i}")" name="@($"knowledge_{i}")" class="form-control mb-2" value="@question.KnowledgeName" />
+                                <div id="@($"answer-container-{i}")" class="answer-container mb-2">
+                                    @{
+                                        int j = 1;
+                                    }
+                                    @foreach (var answer in question.Answers)
+                                    {
+                                        <div class="answer-block d-flex align-items-center mb-2">
+                                            <label class="form-label me-2">Answer @j:</label>
+                                            <input type="text" id="@($"answer_{i}_{j}")" class="form-control me-2 answer-input answer-input-@i" value="@answer.AnswerOption1" required>
+                                            <div class="d-flex align-items-center ms-2">
+                                                <input type="checkbox" class="form-check-input me-1" name="ra_@i" id="@($"ra_{i}_{j}")" @(answer.IsKey ? "checked" : "") style="transform: scale(1.5);">
+                                                <label for="@($"ra_{i}_{j}")" class="form-label ms-1">Correct Answer</label>
+                                            </div>
+                                            <button type="button" class="btn btn-danger btn-sm ms-2 remove-answer">x</button>
+                                        </div>
+                                        j++;
+                                    }
+                                </div>
+                                <button type="button" id="@($"add_answer_{i}")" class="btn btn-success btn-sm me-2 add-answer">Add Answer</button>
+                                <button type="button" class="btn btn-danger btn-sm remove-question">Remove Question</button>
+                            </div>
+                            i++;
+                        }
+                    </div>
+                    <button type="button" class="btn btn-primary btn-sm" id="add-question">Add Question</button>
+                </div>
+                <div class="card-footer">
+                    <button type="button" class="btn btn-primary" id="edit-question">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script type="text/javascript">
+    $(document).ready(function () {
+        var removedKnowledgeIds = [];
+
+        function createAnswerBlock(questionIndex, answerIndex) {
+            return `
+                    <div class="answer-block d-flex align-items-center mb-2">
+                        <label class="form-label me-2">Answer ${answerIndex}:</label>
+                        <input type="text" class="form-control me-2 answer-input answer-input-${questionIndex}" id="answer_${questionIndex}_${answerIndex}" required>
+                        <div class="d-flex align-items-center ms-2">
+                            <input type="checkbox" class="form-check-input me-1" name="ra_${questionIndex}" id="ra_${questionIndex}_${answerIndex}" style="transform: scale(1.5);">
+                            <label for="ra_${questionIndex}_${answerIndex}" class="form-label ms-1">Correct Answer</label>
+                        </div>
+                        <button type="button" class="btn btn-danger btn-sm ms-2 remove-answer">x</button>
+                    </div>
+                `;
+        }
+
+        function createQuestionBlock(index) {
+            return `
+                    <div class="question-block mb-4" data-index="${index}">
+                        <h5>Knowledge ${index}:</h5>
+                        <input type="hidden" id="knowledge_${index}_id" name="knowledge_${index}_id" value="0" />
+                        <input type="text" id="knowledge_${index}" name="knowledge_${index}" class="form-control mb-2" value="" />
+                        <div id="answer-container-${index}" class="answer-container mb-2">
+                            <!-- Answers will be added here -->
+                        </div>
+                        <button type="button" id="add_answer_${index}" class="btn btn-success btn-sm me-2 add-answer">Add Answer</button>
+                        <button type="button" class="btn btn-danger btn-sm remove-question">Remove Question</button>
+                    </div>
+                `;
+        }
+
+        function updateAnswerIndexes(container) {
+            container.find('.answer-block').each(function (index) {
+                $(this).find('.form-label').first().text(`Answer ${index + 1}:`);
+                $(this).find('.answer-input').attr('id', `answer_${container.data('id')}_${index + 1}`);
+                $(this).find('.form-check-input').attr('id', `ra_${container.data('id')}_${index + 1}`);
+                $(this).find('.form-check-input').attr('name', `ra_${container.data('id')}`);
+                $(this).find('label[for]').attr('for', `ra_${container.data('id')}_${index + 1}`);
+            });
+        }
+
+        function updateQuestionIndexes() {
+            $("#question-container .question-block").each(function (index) {
+                var questionIndex = index + 1;
+                $(this).data("index", questionIndex);
+                $(this).find("h5").text(`Knowledge ${questionIndex}:`);
+                $(this).find(".form-control").attr('id', `knowledge_${questionIndex}`).attr('name', `knowledge_${questionIndex}`);
+                $(this).find(".answer-container").attr('id', `answer-container-${questionIndex}`);
+                $(this).find(".add-answer").attr('id', `add_answer_${questionIndex}`);
+                updateAnswerIndexes($(this).find(".answer-container"));
+            });
+        }
+
+        $("#question-container").on("click", ".add-answer", function () {
+            var questionBlock = $(this).closest(".question-block");
+            var questionIndex = questionBlock.data("index");
+            var container = $("#answer-container-" + questionIndex);
+            container.data('id', questionIndex);
+            var answerIndex = container.find(".answer-block").length + 1;
+            container.append(createAnswerBlock(questionIndex, answerIndex));
+        });
+
+        $("#question-container").on("click", ".remove-answer", function () {
+            var container = $(this).closest(".answer-block").parent();
+            $(this).closest(".answer-block").remove();
+            updateAnswerIndexes(container);
+        });
+
+        $("#add-question").click(function () {
+            var newIndex = $("#question-container .question-block").length + 1;
+            $("#question-container").append(createQuestionBlock(newIndex));
+        });
+
+        $("#question-container").on("click", ".remove-question", function () {
+            var questionBlock = $(this).closest(".question-block");
+            var knowledgeId = questionBlock.find("input[type=hidden]").val();
+            if (knowledgeId != 0) {
+                removedKnowledgeIds.push(parseInt(knowledgeId));
+            }
+            questionBlock.remove();
+            updateQuestionIndexes();
+        });
+
+        $("#edit-question").click(function () {
+            var knowledgeList = [];
+
+            $(".question-block").each(function () {
+                var index = $(this).data("index");
+                var knowledgeId = $(`#knowledge_${index}_id`).val();
+                var knowledgeName = $(`#knowledge_${index}`).val();
+
+                if (!knowledgeName) {
+                    return;
+                }
+
+                var answers = [];
+                var container = $(`#answer-container-${index}`);
+                container.find(".answer-block").each(function () {
+                    var answer = $(this).find(".answer-input").val();
+                    var isKey = $(this).find(".form-check-input").is(':checked');
+                    answers.push({
+                        AnswerOption1: answer,
+                        IsKey: isKey
+                    });
+                });
+
+                knowledgeList.push({
+                    KnowledgeId: knowledgeId ? parseInt(knowledgeId) : 0,
+                    KnowledgeName: knowledgeName,
+                    Answers: answers
+                });
+            });
+
+            var data = {
+                ExamId: $('input[name=ExamId]').val(),
+                KnowledgeList: knowledgeList,
+                RemovedKnowledgeIds: removedKnowledgeIds
+            };
+
+            console.log(data);
+
+            $.ajax({
+                type: 'POST',
+                url: '/Manager/Exam/EditQuestion',
+                data: JSON.stringify(data),
+                contentType: 'application/json',
+                success: function (response) {
+                    if (response) {
+                        alert('Success!');
+                        window.location.href = '/Manager/Exam/Index'; // Redirect to Index page of Exam controller
+                    } else {
+                        alert('Error occurred!');
+                    }
+                },
+                error: function (data) {
+                    console.log('Error:', data);
+                }
+            });
+        });
+    });
+
+
+
+</script>

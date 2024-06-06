@@ -1,0 +1,363 @@
+﻿@model KRS_G54.Models.Knowledge
+
+@{
+    ViewData["Title"] = "Create";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <style>
+        body {
+            background-color: white;
+            font-family: Arial, sans-serif;
+        }
+
+        .main {
+            padding: 20px;
+            margin-top: 50px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-weight: bold;
+            color: black;
+        }
+
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .btn-primary {
+            background-color: #ffc107;
+            color: black;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+
+            .btn-primary:hover {
+                background-color: ##ffc107;
+            }
+
+        .text-danger {
+            color: red;
+            margin-left: 5px;
+            font-size: 18px;
+        }
+
+        .quizlet-textarea {
+            width: 100%;
+            min-height: 50px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+            line-height: 1.5;
+            overflow-y: hidden; /* Ẩn thanh cuộn theo chiều dọc */
+            resize: none; /* Ngăn người dùng thay đổi kích thước */
+        }
+
+            .quizlet-textarea:focus {
+                border-color: #ffc107;
+                outline: none;
+            }
+
+        textarea.form-control {
+            height: 50px;
+        }
+
+        .knowledge-field {
+            display: flex;
+        }
+
+        .flex-grow-1 {
+            flex-grow: 1;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto; /* Để căn giữa theo chiều ngang */
+            margin-top: 10%; /* Để căn giữa theo chiều dọc */
+            padding: 20px;
+            border: 1px solid #888;
+            width: 50%;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+            .close:hover,
+            .close:focus {
+                color: black;
+                text-decoration: none;
+                cursor: pointer;
+            }
+    </style>
+</head>
+
+
+<div class="container">
+    <div id="main" class="main">
+
+        <form asp-action="Create" id="form" method="post">
+            <div class="row">
+                <div class="col-md-4">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                </div>
+            </div>
+
+            <h1>Create A New Study Set</h1>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="row">
+                        <div class="form-group col-lg-6">
+                            <label asp-for="Flashcard.FlashcardName" class="control-label">Study Set Name<span class="text-danger">*</span></label>
+                            <input asp-for="Flashcard.FlashcardName" class="form-control" required title="Please enter a Flashcard Name" />
+                            <span asp-validation-for="Flashcard.FlashcardName" class="text-danger"></span>
+                        </div>
+                        <div class="form-group col-lg-6">
+                            <label asp-for="Subject" class="control-label"></label>
+                            <select asp-for="SubjectId" class="form-control" asp-items="ViewBag.Subjects">
+                                <option value="">-- Select a Subject --</option>
+                            </select>
+                            <span asp-validation-for="SubjectId" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div>
+                        <label asp-for="Flashcard.Description" class="control-label"></label>
+                        <input asp-for="Flashcard.Description" class="form-control" />
+                        <span asp-validation-for="Flashcard.Description" class="text-danger"></span>
+                    </div>
+                    <div id="myModal" class="modal">
+                        <div class="modal-content">
+                            <span class="close">&times;</span>
+                            <p id="modalMessage"></p>
+                        </div>
+                    </div>
+                    <div class="list mt-4">
+                        <div class="list-vocab mt-4" id="knowledge-container">
+                            @if (ViewBag.KnowledgeList != null)
+                            {
+                                var index = 0;
+                                foreach (var knowledge in ViewBag.KnowledgeList)
+                                {
+                                    <div class="col-12 d-flex justify-content-between mt-2 knowledge-field">
+                                        <div class="flex-grow-1 col-6 d-flex flex-column form-group">
+                                            <label>Definition<span class="text-danger">*</span></label>
+                                            <textarea name="knowledgeList[@index].Knowledge1" class="form-control quizlet-textarea auto-expand" required>@knowledge.Knowledge1</textarea>
+                                            <span asp-validation-for="knowledgeList[@index].Knowledge1" class="text-danger"></span>
+                                        </div>
+                                        <div class="flex-grow-1 col-5 d-flex flex-column form-group">
+                                            <label>Terms<span class="text-danger">*</span></label>
+                                            <textarea name="knowledgeList[@index].Answer" class="form-control quizlet-textarea auto-expand" required>@knowledge.Answer</textarea>
+                                            <span asp-validation-for="knowledgeList[@index].Answer" class="text-danger"></span>
+                                        </div>
+                                        <button type="button" class="btn btn-danger delete-knowledge" title="Delete"><i class="fas fa-trash-alt"></i></button>
+                                    </div>
+
+                                    index++;
+                                }
+                            }
+                        </div>
+                        <div class="form-group mt-4">
+                            <div class="row">
+                                <div class="col">
+                                    <button type="button" class="btn btn-secondary" id="add-set">Add More "Definition & Terms "</button>
+                                </div>
+                                <div class="col " style="display: flex;">
+                                    <input type="submit" class="btn btn-secondary ml-auto" value="Create" class="btn btn-primary" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+        <form method="post" enctype="multipart/form-data" action="/Knowledge/UploadExcel" id="uploadForm">
+            <div class="form-group">
+                <label for="excelFile">Choose Excel File:</label>
+                <input type="file" class="form-control-file" id="excelFile" name="excelFile">
+            </div>
+            <button type="submit" class="btn btn-primary">Upload</button>
+            <a href="/TemplateTD.xlsx" class="btn btn-secondary">Download Excel Template</a>
+        </form>
+    </div>
+
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
+<script>
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const textareas = document.querySelectorAll('.quizlet-textarea');
+
+        textareas.forEach(textarea => {
+            // Đặt chiều cao ban đầu
+            textarea.style.height = 'auto';
+            // Gọi hàm xử lý sự kiện input
+            handleInputEvent(textarea);
+        });
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const textarea = document.getElementById('autoExpandTextarea');
+
+        textarea.addEventListener('input', function() {
+            // Đặt chiều cao của div dựa trên scrollHeight của nội dung
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight + 10) + 'px'; // Thêm khoảng cách để tránh lặp lại
+        });
+    });
+
+    document.getElementById('uploadForm').addEventListener('submit', function(event) {
+        const excelFileInput = document.getElementById('excelFile');
+        if (!excelFileInput.files.length) {
+            event.preventDefault(); // Prevent form submission
+            alert('Please upload a valid Excel file.'); // Show alert
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Lấy danh sách các textarea trong vòng lặp foreach
+        const textareas = document.querySelectorAll('.auto-expand');
+
+        // Gắn sự kiện input cho từng textarea
+        textareas.forEach(textarea => {
+            textarea.addEventListener('input', function() {
+                // Đặt chiều cao về mặc định trước khi tính toán lại chiều cao mới
+                this.style.height = 'auto';
+
+                // Thiết lập chiều cao mới dựa trên scrollHeight của nội dung bên trong textarea
+                this.style.height = (this.scrollHeight + 10) + 'px';
+            });
+        });
+
+        // Gắn sự kiện click cho nút "Add More "Terms & Definition""
+        document.getElementById('add-set').addEventListener('click', function() {
+            const container = document.getElementById('knowledge-container');
+            const newIndex = container.querySelectorAll('.knowledge-field').length;
+
+            const newFields = `
+                    <div class="col-12 d-flex justify-content-between mt-2 knowledge-field">
+                    <div class="flex-grow-1 col-6 d-flex flex-column form-group">
+                    <label>Definition<span class="text-danger">*</span></label>
+                    <textarea name="knowledgeList[${newIndex}].Knowledge1" class="form-control quizlet-textarea auto-expand" required></textarea>
+                    <span asp-validation-for="knowledgeList[${newIndex}].Knowledge1" class="text-danger"></span>
+                    </div>
+                    <div class="flex-grow-1 col-5 d-flex flex-column form-group">
+                    <label>Terms<span class="text-danger">*</span></label>
+                    <textarea name="knowledgeList[${newIndex}].Answer" class="form-control quizlet-textarea auto-expand" required></textarea>
+                    <span asp-validation-for="knowledgeList[${newIndex}].Answer" class="text-danger"></span>
+                    </div>
+                    <button type="button" class="btn btn-danger delete-knowledge" title="Delete"><i class="fas fa-trash-alt"></i></button>
+                    </div>
+                    `;
+
+            // Thêm các trường mới vào container
+            container.insertAdjacentHTML('beforeend', newFields);
+
+            // Lấy danh sách các textarea mới được thêm vào
+            const newTextArea1 = container.querySelector(`textarea[name="knowledgeList[${newIndex}].Knowledge1"]`);
+            const newTextArea2 = container.querySelector(`textarea[name="knowledgeList[${newIndex}].Answer"]`);
+
+            // Gắn sự kiện input cho các textarea mới
+            handleInputEvent(newTextArea1);
+            handleInputEvent(newTextArea2);
+
+            // Tự động cuộn xuống cuối container sau khi thêm các trường mới
+            container.scrollTop = container.scrollHeight;
+        });
+    });
+
+    // Định nghĩa hàm xử lý sự kiện input
+    function handleInputEvent(textarea) {
+        textarea.addEventListener('input', function() {
+            // Reset the height to auto to recalculate the correct height
+            this.style.height = 'auto';
+            // Set the height based on the scrollHeight of the content
+            this.style.height = (this.scrollHeight + 10) + 'px';
+        });
+
+        // Trigger the input event once to set the initial height
+        textarea.dispatchEvent(new Event('input'));
+    }
+
+    function toggleDeleteButtonVisibility() {
+        const knowledgeFields = document.querySelectorAll('.knowledge-field');
+        const deleteButtons = document.querySelectorAll('.delete-knowledge');
+
+        if (knowledgeFields.length > 0) {
+            deleteButtons.forEach(button => {
+                button.style.display = 'block';
+            });
+        } else {
+            deleteButtons.forEach(button => {
+                button.style.display = 'none';
+            });
+        }
+    }
+
+    document.addEventListener('click', function(event) {
+        if (event.target.classList.contains('delete-knowledge')) {
+            event.target.closest('.knowledge-field').remove();
+            toggleDeleteButtonVisibility();
+        }
+    });
+    document.getElementById('form').addEventListener('submit', function(event) {
+        const knowledgeFields = document.querySelectorAll('.knowledge-field');
+        if (knowledgeFields.length < 2) {
+            event.preventDefault();
+            showModal('Please add at least 2 Terms & Definitions.');
+        }
+    });
+
+    function showModal(message) {
+        var modal = document.getElementById('myModal');
+        var modalContent = document.querySelector('.modal-content');
+        var modalMessage = document.getElementById('modalMessage');
+        var closeButton = document.querySelector('.close');
+
+        // Display the message in the modal
+        modalMessage.textContent = message;
+
+        // Display the modal
+        modal.style.display = 'block';
+
+        // Close the modal when the close button is clicked
+        closeButton.onclick = function() {
+            modal.style.display = 'none';
+        };
+    }
+
+    window.onload = toggleDeleteButtonVisibility;
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
+
+</html>

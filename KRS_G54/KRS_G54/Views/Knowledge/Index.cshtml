@@ -1,0 +1,247 @@
+﻿@model List<KRS_G54.Models.Knowledge>;
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@addTagHelper *, AuthoringTagHelpers
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            background-color: #AFEEEE;
+        }
+
+        .flashcard {
+            width: 900px;
+            height: 400px;
+            background-color: white;
+            color: black;
+            border-radius: 10px;
+            position: relative;
+            box-shadow: 5px 5px 10px rgba(0,0,0,0.2);
+            margin: 0 auto;
+            margin-top: 100px;
+            transform-style: preserve-3d;
+            transition: all 1s ease-in-out;
+            cursor: pointer;
+        }
+
+            .flashcard .front, .flashcard .back {
+                width: 100%;
+                height: 100%;
+                position: absolute;
+                border-radius: 10px;
+                backface-visibility: hidden;
+                padding: 20px;
+                box-sizing: border-box;
+            }
+
+            .flashcard .front {
+                z-index: 2;
+                background-color: lightblue;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-around;
+                align-items: center;
+                transform: rotateY(0deg);
+            }
+
+            .flashcard .back {
+                transform: rotateY(-180deg);
+                background-color: whitesmoke;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-around;
+                align-items: center;
+            }
+
+                .flashcard .front h2, .flashcard .back h2 {
+                    margin: 1px 0;
+                    font-size: 24px;
+                }
+
+                .flashcard .front p, .flashcard .back p {
+                    margin: 1px 0;
+                    font-size: 18px;
+                }
+
+                .flashcard .front button, .flashcard .back button {
+                    border: none;
+                    background-color: dodgerblue;
+                    color: white;
+                    padding: 10px 20px;
+                    border-radius: 5px;
+                    cursor: pointer;
+                }
+
+                    .flashcard .front button:hover, .flashcard .back button:hover {
+                        background-color: blue;
+                    }
+
+        .flipped {
+            transform: rotateY(-180deg);
+        }
+
+        .flashcard .front p, .flashcard .back p {
+            display: inline-block;
+            margin: 0;
+            font-size: 18px;
+        }
+
+        #buttonContainer {
+            text-align: center;
+        }
+
+        #nextButton, #prevButton {
+            margin: 10px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: dodgerblue;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+            #nextButton:hover, #prevButton:hover {
+                background-color: blue; /* Màu nền của nút khi rê chuột qua */
+            }
+
+        #quizletContainer {
+            margin-top: 20px;
+        }
+
+        .quizletItem {
+            margin-bottom: 10px;
+            overflow: hidden;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            background-color: #E0FFFF;
+        }
+
+        .question,
+        .answer {
+            float: left;
+            width: calc(50% - 10px);
+            box-sizing: border-box;
+            padding: 10px;
+        }
+
+
+
+        .separator {
+            color: black;
+            height: 100%;
+            width: 100px;
+            background-color: #black;
+            float: left;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- Thêm jQuery -->
+    <script>
+
+        var currentQuestion = 0;
+
+        function showNextQuestion() {
+            var knowledgeItems = $(".knowledgeItem");
+
+            currentQuestion = currentQuestion % knowledgeItems.length;
+
+            $(".front h2").text("Question " + (currentQuestion + 1));
+            $(".front p").text(knowledgeItems.eq(currentQuestion).find("div").first().text().split(' Answer:')[0]);
+
+            $(".back h2").text("Answer " + (currentQuestion + 1));
+            $(".back p").text(knowledgeItems.eq(currentQuestion).find("div").last().text().split('Answer:')[1].trim());
+        }
+
+        $(document).ready(function() {
+            showNextQuestion(); // Hiển thị câu hỏi và câu trả lời đầu tiên khi trang được tải
+
+            $(".flashcard").click(function() {
+                var flashcard = $("#flashcard");
+                flashcard.toggleClass("flipped");
+            });
+
+            $("button#nextButton").click(function(event) {
+                event.stopPropagation(); // Ngăn chặn sự kiện click từ nút Next lan ra phần tử cha
+                currentQuestion++;
+                showNextQuestion();
+            });
+
+            $("button#prevButton").click(function(event) {
+                event.stopPropagation(); // Ngăn chặn sự kiện click từ nút Previous lan ra phần tử cha
+                currentQuestion--;
+                if (currentQuestion < 0) {
+                    currentQuestion = $(".knowledgeItem").length - 1;
+                }
+                showNextQuestion();
+            });
+        });
+    </script>
+</head>
+<body>
+    <div>
+
+        <ul style="list-style-type: none; text-align: center;">
+            <li><strong>Subject: @Model.FirstOrDefault()?.Subject?.SubjectName</strong></li>
+        </ul>
+
+    </div>
+    <div class="flashcard" id="flashcard">
+        <div class="front">
+            <h2></h2> <!-- cập nhật JavaScript -->
+            <p></p>
+
+        </div>
+        <div class="back">
+            <h2></h2>
+            <p></p>
+
+        </div>
+    </div>
+    <div id="buttonContainer">
+        <button id="prevButton">Previous</button>
+        <button id="nextButton">Next</button>
+    </div>
+    <div id="knowledgeList" style="display: none;">
+        @{
+            int order = 1;
+        }
+        @foreach (var item in Model)
+        {
+            <div class="knowledgeItem" style="display: none;">
+                <div>
+                    @item.Knowledge1
+                    Answer: @item.Answer
+                </div>
+                <hr />
+            </div>
+            order++;
+        }
+    </div>
+    <div id="quizletContainer">
+        @{
+            int Qid = 1;
+        }
+        @foreach (var item in Model)
+        {
+            <div class="quizletItem">
+                <div class="question">
+                    Question @Qid: @item.Knowledge1
+                    <div class="separator"></div>
+                </div>
+
+                <div class="answer">
+                    Answer: @item.Answer
+                </div>
+            </div>
+            Qid++;
+        }
+    </div>
+
+</body>
+</html>
+
+

@@ -1,0 +1,33 @@
+﻿@model KRS_G54.Models.Role
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@addTagHelper *, AuthoringTagHelpers
+@{
+    ViewData["Title"] = "Create";
+    Layout = "/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<h1>Create</h1>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label>RoleName<span class="text-danger">*</span></label>
+                <input asp-for="RoleName" class="form-control" />
+                <span asp-validation-for="RoleName" class="text-danger"></span>
+            </div>
+            <div class="form-group col-lg-12" style="padding-left:0px">
+                <label asp-for="Description" class="control-label"></label>
+                @Html.TextAreaFor(Model => Model.Description, new {@id = "description",
+                @class = "form-control"})
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+            <div>
+                @Html.ActionLink("Back to List", "ListRole",new {}, new {@class = "btn btn-outline-primary text-black mr-2"})
+                <input type="submit" value="Create" class="btn btn-success" />
+            </div>
+        </form>
+    </div>
+</div>
+

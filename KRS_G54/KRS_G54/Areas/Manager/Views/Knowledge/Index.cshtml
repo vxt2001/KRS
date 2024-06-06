@@ -1,0 +1,102 @@
+﻿@model IPagedList<KRS_G54.Models.ExamKnowledge>
+@using X.PagedList.Mvc.Core
+@using X.PagedList
+
+@{
+    ViewData["Title"] = "List Question";
+    Layout = "/Areas/Manager/Views/Shared/_Layout.cshtml";
+}
+<style>
+    .form-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .form-inline {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+    }
+</style>
+<h1>List Question</h1>
+
+<div class="form-container">
+    <form method="get" asp-action="Index" class="form-inline justify-content-center">
+        <div class="form-group mx-sm-3 mb-2">
+            <input type="text" name="searchString" value="@ViewBag.CurrentSearch" class="form-control" placeholder="Search by Question" />
+        </div>
+        <button type="submit" class="btn btn-primary mb-2">Search</button>
+    </form>
+</div>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>SubjectCode</th>
+            <th style="width: 15%;">Topic</th>
+            <th style="width: 50%;">Question</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr id="row-@item.ExamKnowledgeId">
+                <td>@(string.IsNullOrEmpty(item.Subject?.SubjectName) ? "" : item.Subject.SubjectCode)</td>
+                <td>@(string.IsNullOrEmpty(item.Lesson?.Topic) ? "" : item.Lesson.Topic)</td>
+                <td>@Html.Raw(item.Knowledge.Replace("\n", "<br>"))</td>
+                <td>
+                    <div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
+                        <div class="btn-group mr-2" role="group" aria-label="First group">
+                            @Html.ActionLink("Edit", "Edit", new { knowledgeId = item.ExamKnowledgeId }, new { @class = "btn btn-success" })
+                        </div>
+                        <div class="btn-group mr-2" role="group" aria-label="Second group">
+                            <button type="button" class="btn btn-warning" onclick="editLesson(@item.ExamKnowledgeId)">Edit Lesson</button>
+                        </div>
+                        <div class="btn-group" role="group" aria-label="Third group">
+                            <button type="button" class="btn btn-danger" onclick="deleteItem(@item.ExamKnowledgeId)">Delete</button>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div>
+    @Html.PagedListPager(Model, page => Url.Action("Index", new { page, searchString = ViewBag.CurrentSearch }))
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+    function editLesson(id) {
+        // Chuyển hướng đến trang chỉnh sửa Lesson với id của Knowledge được chọn
+        window.location.href = '@Url.Action("EditLesson", "Knowledge")?knowledgeId=' + id;
+    }
+
+    function deleteItem(id) {
+        if (confirm('Are you sure you want to delete this item?')) {
+            $.ajax({
+                url: '@Url.Action("Delete", "Knowledge")',
+                type: 'POST',
+                data: {
+                    id: id,
+                    "__RequestVerificationToken": $('input[name="__RequestVerificationToken"]').val()
+                },
+                success: function(result) {
+                    if (result.success) {
+                        $('#row-' + id).remove();
+                        location.reload();
+                    } else {
+                        alert('Error deleting item: ' + result.message);
+                    }
+                },
+                error: function() {
+                    alert('An error occurred while deleting the item.');
+                }
+            });
+        }
+    }
+</script>

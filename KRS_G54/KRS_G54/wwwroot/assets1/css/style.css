@@ -1,0 +1,79 @@
+/* Reset CSS */
+*{
+    /* Emmet */
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+
+}
+
+html{
+    font-family: Arial, Helvetica, sans-serif;
+    scroll-behavior: smooth;
+    background-color: #ccc;
+}
+
+body{
+    background-color: red;
+}
+
+
+/* Main */
+
+
+.main {
+    margin: 12px;
+    background-color: #0788ba;
+}
+
+
+#form {
+    padding: 10px;
+    input{
+        padding: 8px 12px;
+        border-radius: 4px;
+        border: none;
+    }
+
+    input:focus {
+        border: none;
+        border-bottom: 2px solid black;
+        outline: none;
+    }
+
+    button{
+        padding: 4px 8px;
+        border-color: 1px solid #ccc;
+        border-radius: 6px;
+    }
+
+    .icon{
+        border-radius: 50%;
+    }
+
+    .list{
+        border-radius: 6px;
+        padding: 20px;
+        background-color: #fff;
+    }
+
+    .list-button > button{
+        background-color: #fff;
+        border: none;
+    }
+
+    .list-vocab{
+        border-top: 1px solid #ccc;
+    }
+
+    .list-vocab input{
+        border-bottom: 2px solid black;
+    }
+
+    .add-image{
+        padding: 4px;
+        border: 1px dashed #ccc;
+        align-items: center;
+        border-radius: 4px;
+    }
+}

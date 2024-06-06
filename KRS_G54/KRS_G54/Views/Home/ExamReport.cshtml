@@ -1,0 +1,251 @@
+﻿@model KRS_G54.Models.ExamReportViewModel
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Exam Report</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        .ww {
+            padding: 20px;
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        h2 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .filter-form {
+            display: flex;
+            flex-wrap: wrap;
+            background-color: #fff;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+            .filter-form label {
+                margin-right: 10px;
+                font-weight: bold;
+            }
+
+            .filter-form input, .filter-form select, .filter-form button {
+                margin-right: 10px;
+                margin-bottom: 10px;
+                padding: 8px;
+                border-radius: 4px;
+                border: 1px solid #ccc;
+            }
+
+            .filter-form button {
+                cursor: pointer;
+                background-color: #007bff;
+                color: #fff;
+                border: none;
+                transition: background-color 0.3s;
+            }
+
+                .filter-form button:hover {
+                    background-color: #0056b3;
+                }
+
+        .table-ww {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 0;
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f4f4f4;
+        }
+
+        tfoot {
+            height: 50px; /* Adjust height as needed */
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            background-color: #222;
+            color: #fff;
+            position: relative;
+            bottom: 0;
+            width: 100%;
+        }
+
+        .pagination {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+            .pagination ul {
+                list-style-type: none;
+                margin: 0;
+                padding: 0;
+            }
+
+                .pagination ul li {
+                    display: inline;
+                    margin-right: 5px;
+                }
+
+                    .pagination ul li a {
+                        text-decoration: none;
+                        padding: 5px 10px;
+                        border: 1px solid #ccc;
+                        border-radius: 3px;
+                    }
+
+                        .pagination ul li a.active {
+                            background-color: #007bff;
+                            color: #fff;
+                        }
+
+                        .pagination ul li a:hover {
+                            background-color: #f4f4f4;
+                        }
+    </style>
+    <script>
+        function resetFilters() {
+            document.getElementById('filterForm').reset();
+        }
+    </script>
+</head>
+
+<div class="ww">
+
+    <a href="@Url.Action("Index", "Class", new {Id = ViewBag.ClassId })" class="ttr-material-button">
+        <span class="ttr-icon"><i class="ti-book"></i></span>
+        <span class="ttr-label">Back To Class Info</span>
+    </a>
+    <h2>Class: @Model.Class.ClassName</h2>
+
+    <div class="filter-form">
+        <form id="filterForm" method="get" action="@Url.Action("ExamReport", "Home")">
+            <input type="hidden" name="classId" value="@Model.Class.ClassId" />
+            <div>
+                <label>Search Student:</label>
+                <input type="text" name="searchStudent" value="@ViewBag.SearchStudent" />
+                <label>Score from:</label>
+                <input type="number" name="scoreFrom" step="0.1" value="@ViewBag.ScoreFrom" />
+                <label>to</label>
+                <input type="number" name="scoreTo" step="0.1" value="@ViewBag.ScoreTo" />
+                <br />
+                <label>Search by Exam Name:</label>
+                <input type="text" name="examName" value="@ViewBag.ExamName" />
+                <button type="submit">Filter</button>
+                <button type="button" onclick="resetFilters()">Reset Filter</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="table-ww">
+        <table>
+            <thead>
+                <tr>
+
+                    <th>Student Name</th>
+                    <th>Email</th>
+                    <th>Exam Name</th>
+                    <th>Highest Score</th>
+                    <th>Attempt Count</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    var currentPage = ViewContext.HttpContext.Request.Query["page"].FirstOrDefault();
+                    if (string.IsNullOrEmpty(currentPage))
+                    {
+                        currentPage = "1";
+                    }
+
+                    int currentPageNumber = Convert.ToInt32(currentPage);
+                    var students = Model.FilteredResults.Skip((currentPageNumber - 1) * 5).Take(5);
+
+
+
+                    if (students.Any())
+                    {
+                        foreach (var result in students)
+                        {
+                            <tr>
+
+                                <td>@result.FullName</td>
+                                <td>@result.Email</td>
+                                <td>@result.ExamName</td>
+                                <td>@result.HighestScore</td>
+                                <td>@result.AttemptCount</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" style="text-align:center;">No data available</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="pagination">
+        @if (Model.FilteredResults.Any())
+        {
+            var totalStudents = Model.FilteredResults.Count;
+            var totalPages = (int)Math.Ceiling((double)totalStudents / 5);
+            var currentPageString = ViewContext.HttpContext.Request.Query["page"].FirstOrDefault();
+
+            if (string.IsNullOrEmpty(currentPageString))
+            {
+                currentPageString = "1";
+            }
+
+            int pageNumber = Convert.ToInt32(currentPageString);
+
+            if (totalPages > 1)
+            {
+                <ul>
+                    @for (int i = 1; i <= totalPages; i++)
+                    {
+                        <li>
+                            <a href="@Url.Action("ExamReport", "Home", new { classId = Model.Class.ClassId, searchStudent = ViewContext.HttpContext.Request.Query["searchStudent"], scoreFrom = ViewContext.HttpContext.Request.Query["scoreFrom"], scoreTo = ViewContext.HttpContext.Request.Query["scoreTo"], examName = ViewContext.HttpContext.Request.Query["examName"], page = i })" class="@(i == pageNumber ? "active" : "")">@i</a>
+
+                        </li>
+                    }
+                </ul>
+            }
+        }
+
+    </div>
+</div>
+
+
+
+</html>

@@ -1,0 +1,205 @@
+﻿@model List<KRS_G54.Models.ExamKnowledge>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var subjects = ViewBag.SubjectList as List<Subject>;
+}
+<style>
+    select.form-control {
+        display: none !important;
+    }
+
+    .text-danger {
+        color: red;
+        margin-left: 5px;
+    }
+</style>
+<main class="ttr-wrapper">
+    <div class="container">
+        <div class="row">
+            <!-- Your Profile Views Chart -->
+            <div class="col-lg-12 m-b30">
+                <div class="widget-box">
+                    <div class="wc-title">
+                        <h4>Add New Exam</h4>
+                    </div>
+                    <div class="widget-inner">
+                        <form class="edit-profile m-b30" id="examForm" method="post" action="@Url.Action("AddNewExam", "Exam")">
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="ml-auto">
+                                        <h3>1. Basic info</h3>
+                                    </div>
+                                </div>
+                                <div class="form-group col-6">
+                                    <label class="col-form-label">Exam Name<span class="text-danger">*</span></label>
+                                    <div>
+                                        <input class="form-control" id="examName" type="text" value="" required>
+                                    </div>
+                                </div>
+                                <div class="seperator"></div>
+
+                                <div class="col-12 m-t20">
+                                    <div class="ml-auto m-b5">
+                                        <h3>2. Choose Your Subject</h3>
+                                    </div>
+                                </div>
+                                <div class="form-group col-12">
+                                    <select class="form-control" id="subjectSelect" required>
+                                        <option value="">Choose one</option>
+                                        @foreach (var subject in subjects)
+                                        {
+                                            <option value="@subject.SubjectId">@subject.SubjectName</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-12 m-t20">
+                                    <div class="ml-auto">
+                                        <h3 class="m-form__section">3. Add Item</h3>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <table id="item-add" style="width:100%;">
+                                        <!-- Không có mục nào ban đầu -->
+                                    </table>
+                                </div>
+                                <div class="col-12">
+                                    <button type="button" class="btn-secondry add-item m-r5"><i class="fa fa-fw fa-plus-circle"></i>Add Item</button>
+                                    <button type="Submit" class="btn">Submit</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div class="ttr-overlay"></div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function () {
+        var lessonsData = []; // Store lessons data
+
+        $('#subjectSelect').change(function () {
+            var subjectId = $(this).val();
+            if (subjectId) {
+                $.ajax({
+                    type: "GET",
+                    url: '/Exam/GetLessonsBySubjectId',
+                    data: { subjectId: subjectId },
+                    success: function (data) {
+                        lessonsData = data; // Update lessons data
+                        clearAllItems(); // Clear existing items
+                        addNewItem(); // Add a new item automatically when subject is selected
+                    }
+                });
+            } else {
+                lessonsData = []; // Clear lessons data
+                clearAllItems(); // Clear all items when no subject is selected
+            }
+        });
+
+        function updateLessonSelect(selectElement) {
+            selectElement.empty();
+            selectElement.append('<option value="">Choose one</option>');
+            for (var i = 0; i < lessonsData.length; i++) {
+                selectElement.append('<option value="' + lessonsData[i].lessonId + '">' + lessonsData[i].topic + '</option>');
+            }
+            selectElement.selectpicker('refresh');
+        }
+
+        var itemCounter = 1;
+
+        function createNewLessonSelect() {
+            var newSelectId = 'lessonSelect' + itemCounter++;
+            var newSelect = $('<select class="form-control lesson-select required" id="' + newSelectId + '"></select>');
+            newSelect.append('<option value="">Choose one</option>'); // Add default option
+            return newSelect;
+        }
+
+        function newMenuItem() {
+            var newElem = $('<tr class="list-item"></tr>');
+            var newLessonSelect = createNewLessonSelect();
+            newElem.append('<td><div class="row"><div class="col-md-6"><label class="col-form-label">Lesson</label><div></div></div><div class="col-md-3"><label class="col-form-label">Number Of Questions</label><div><input type="number" class="form-control question-count" min="1" max="0" value="" required></div></div><div class="col-md-2"><label class="col-form-label">Close</label><div class="form-group"><a class="delete" href="#"><i class="fa fa-close"></i></a></div></div></div></td>');
+            newElem.find('.row div:eq(0)').append(newLessonSelect);
+            newElem.appendTo('table#item-add');
+            updateLessonSelect(newLessonSelect); // Populate the new lesson select element
+        }
+
+        function addNewItem() {
+            newMenuItem();
+        }
+
+        function clearAllItems() {
+            $('#item-add').empty();
+        }
+
+        if ($("table#item-add").is('*')) {
+            $('.add-item').on('click', function (e) {
+                e.preventDefault();
+                newMenuItem();
+            });
+
+            $(document).on("click", "#item-add .delete", function (e) {
+                e.preventDefault();
+                $(this).closest('tr').remove();
+            });
+        }
+        $(document).on('change', '.lesson-select', function () {
+            console.log('Lesson select changed'); // Log when lesson select is changed
+            var lessonSelect = $(this);
+            var lessonId = lessonSelect.val();
+            if (lessonId) {
+                console.log('Selected lesson ID:', lessonId); // Log selected lesson ID
+                $.ajax({
+                    type: "GET",
+                    url: '/api/lesson/' + lessonId + '/knowledgeCount',
+                    success: function (data) {
+                        console.log('Knowledge count received:', data); // Log received data
+                        var maxQuestions = data;
+                        var questionInput = lessonSelect.closest('tr').find('.question-count');
+                        questionInput.attr('max', maxQuestions);
+                        if (questionInput.val() > maxQuestions) {
+                            questionInput.val(maxQuestions);
+                        }
+                    },
+                    error: function () {
+                        alert('Failed to retrieve knowledge count. Please try again.');
+                    }
+                });
+            }
+        });
+        $('#examForm').submit(function (e) {
+            e.preventDefault(); // Prevent default form submission
+
+            // Collect form data
+            var examName = $('#examName').val();
+            var subjectId = $('#subjectSelect').val();
+            var lessons = [];
+
+            $('.list-item').each(function () {
+                var lessonId = $(this).find('.lesson-select').val();
+                var numberOfQuestions = $(this).find('input[type="number"]').val();
+                lessons.push({ LessonId: lessonId, NumberOfQuestions: numberOfQuestions });
+            });
+
+            // Send data to server via AJAX
+            $.ajax({
+                type: "POST",
+                url: $('#examForm').attr('action'),
+                data: JSON.stringify({ ExamName: examName, SubjectId: subjectId, Lessons: lessons }),
+                contentType: 'application/json',
+                success: function (response) {
+                    window.location.href = '@Url.Action("ExamDetail", "Exam")' + '?Id=' + response.ueid;
+                },
+                error: function (error) {
+                    // Handle the error if any
+                }
+            });
+        });
+    });
+</script>
+
+

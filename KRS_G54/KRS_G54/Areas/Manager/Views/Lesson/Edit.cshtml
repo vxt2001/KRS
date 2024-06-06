@@ -1,0 +1,54 @@
+﻿@model KRS_G54.Models.Lesson
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@addTagHelper *, AuthoringTagHelpers
+@{
+    ViewData["Title"] = "Edit";
+    Layout = "/Areas/Manager/Views/Shared/_Layout.cshtml";
+}
+<script src="~/ckeditor/ckeditor.js"></script>
+<h1 style="text-align:center">Edit Lesson</h1>
+
+<hr />
+<div class="row">
+    <div class="col-md-12">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group col-lg-6" style="display:none">
+                <label asp-for="LessonId" class="control-label"></label>
+                <input asp-for="LessonId" class="form-control" readonly />
+                <span asp-validation-for="LessonId" class="text-danger"></span>
+            </div>
+            <div class="row">
+                <div class="form-group col-lg-6">
+                    <label asp-for="Topic" class="control-label"></label>
+                    <input asp-for="Topic" class="form-control" required />
+                    <span asp-validation-for="Topic" class="text-danger"></span>
+                </div>
+                <div class="form-group col-lg-6">
+                    <label>Slot</label>
+                    <input asp-for="Order" class="form-control" required />
+                    <span asp-validation-for="Order" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group col-lg-6">
+                    <label class="control-label">Subject</label>
+                    <select asp-for="SubjectId" class="form-control" asp-items="@ViewBag.SubjectSelectList">
+                    </select>
+
+                    <span asp-validation-for="SubjectId" class="text-danger"></span>
+                </div>
+
+            </div>
+           
+            
+
+            <div class="form-group">
+                @Html.ActionLink("Back to List", "Index",new {}, new {@class = "btn btn-outline-primary text-black mr-2"})
+                <input type="submit" value="Update" class="btn btn-success" />
+            </div>
+
+
+        </form>
+    </div>
+</div>

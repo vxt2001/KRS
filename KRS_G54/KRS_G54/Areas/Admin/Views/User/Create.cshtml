@@ -1,0 +1,85 @@
+﻿@model KRS_G54.Models.Account
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@addTagHelper *, AuthoringTagHelpers
+@{
+    ViewData["Title"] = "Create";
+    Layout = "/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+
+<h1>Create Account</h1>
+<hr />
+<div class="row">
+    <div class="col-md-12">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="row">
+                <div class="form-group col-lg-6">
+                    <label>UserName<span class="text-danger">*</span></label>
+                    <input asp-for="UserName" class="form-control" />
+                    <span asp-validation-for="UserName" class="text-danger"></span>
+                </div>
+                <div class="form-group col-lg-6">
+                    <label>FullName<span class="text-danger">*</span></label>
+                    <input asp-for="FullName" class="form-control" />
+                    <span asp-validation-for="FullName" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group" style="display:none">
+                    <label>Password<span class="text-danger">*</span></label>
+                    <input asp-for="Password" class="form-control" value="@Context.Session.GetString("password")" />
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+            </div>
+           
+            <div class="row">
+                <div class="form-group col-lg-6">
+                    <label>PhoneNumber<span class="text-danger">*</span></label>
+                    <input asp-for="PhoneNumber" class="form-control" />
+                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                </div>
+                <div class="form-group  col-lg-6">
+                    <label>Email<span class="text-danger">*</span></label>
+                    <input asp-for="Email" class="form-control" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group col-lg-6">
+                    <label>Role<span class="text-danger">*</span></label>
+                    <select asp-for="RoleId" class="form-control" asp-items="@ViewBag.RoleSelectList">
+                    </select>
+                </div>
+                <div class="form-group col-lg-6">
+                    <label class="control-label">Status</label>
+                    <br />
+                    <div class="custom-control custom-switch" style="margin-top:6px">
+                        <input type="checkbox" class="custom-control-input" id="toggleStatus" name="Status" value="true" />
+                        <label class="custom-control-label" for="toggleStatus" id="toggleLabel">Deactivate</label>
+                    </div>
+                    <input type="hidden" name="Status" value="false" />
+                </div>
+            </div>
+           
+            <div class="form-group col-lg-6" style="display:none">
+                <label>ProfilePicture<span class="text-danger">*</span></label>
+                <input asp-for="ProfilePicture" class="form-control" value="Default_pfp.svg.png" />
+                <span asp-validation-for="ProfilePicture" class="text-danger"></span>
+            </div>
+           <div class="form-group col-lg-12" style="padding-left:0px">
+                <label asp-for="Description" class="control-label"></label>
+                @Html.TextAreaFor(Model => Model.Description, new {@id = "description",
+                @class = "form-control"})
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+            <div>
+                @Html.ActionLink("Back to List", "ListUser",new {}, new {@class = "btn btn-outline-primary text-black mr-2"})
+                <input type="submit" value="Create" class="btn btn-success" />
+            </div>
+        </form>
+    </div>
+</div>
+
+
+

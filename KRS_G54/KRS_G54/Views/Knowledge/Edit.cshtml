@@ -1,0 +1,238 @@
+﻿@model List<KRS_G54.Models.Knowledge>
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+@addTagHelper *, AuthoringTagHelpers
+
+<head>
+    <style>
+        .text-danger {
+            color: red;
+            margin-left: 5px;
+            font-size: 18px;
+        }
+
+        .textarea.form-control {
+            min-height: 50px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+            line-height: 1.5;
+            overflow-y: hidden;
+            resize: none;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0, 0, 0);
+            background-color: rgba(0, 0, 0, 0.4);
+            padding-top: 60px;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 50%;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+         .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 10px;
+        }
+
+        .modal-buttons button {
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Edit FlashCard</h1>
+
+        <form asp-controller="Knowledge" asp-action="Edit" method="post" id="editForm">
+            <input type="hidden" name="flashcardId" value="@Model.FirstOrDefault()?.FlashcardId" />
+            <input type="hidden" id="deletedKnowledgeIds" name="deletedKnowledgeIds" value="" />
+            <div class="row">
+                <div class="form-group col-lg-6">
+                    <label for="flashcardName">Flashcard Name:<span class="text-danger">*</span></label>
+                    <input type="text" id="flashcardName" name="flashcardName" value="@Model.FirstOrDefault()?.Flashcard.FlashcardName" class="form-control" required title="Please enter a Flashcard Name" />
+                </div>
+
+                <div class="form-group col-lg-6">
+                    <label for="subjectId">Subject:</label>
+                    <select id="subjectId" name="subjectId" class="form-control">
+                        <option value="">-- Select a Subject --</option>
+                        @if (ViewData["Subjects"] != null)
+                        {
+                            foreach (var subject in (SelectList)ViewData["Subjects"])
+                            {
+                                <option value="@subject.Value" selected="@((subject.Value == Model.FirstOrDefault()?.Flashcard?.SubjectId.ToString()))">
+                                    @subject.Text
+                                </option>
+                            }
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Description:</label>
+                <input type="text" id="description" name="description" value="@Model.FirstOrDefault()?.Flashcard.Description" class="form-control" />
+            </div>
+            <table id="knowledgeTable" class="table">
+                <thead>
+                    <tr>
+                        <th>Terms<span class="text-danger">*</span></th>
+                        <th>Definition<span class="text-danger">*</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (int i = 0; i < Model.Count; i++)
+                    {
+                        <tr class="col-md-12">
+                            <td class="col-md-6">
+                                <input type="hidden" name="knowledgeList[@i].KnowledgeId" value="@Model[i].KnowledgeId" />
+                                <textarea name="knowledgeList[@i].Knowledge1" class="form-control textarea" required title="Please enter a Term">@Html.Raw(Model[i].Knowledge1)</textarea>
+                            </td>
+                            <td class="col-md-6">
+                                <textarea name="knowledgeList[@i].Answer" class="form-control textarea" required title="Please enter a Definition">@Html.Raw(Model[i].Answer)</textarea>
+                            </td>
+                            <td class="col-md-1">
+                                <button type="button" class="btn btn-danger" onclick="confirmDelete(this, @Model[i].KnowledgeId)">X</button>
+                            </td>
+                        </tr>
+                    }
+
+                    <tr id="newKnowledgeRow" style="display: none;">
+                        <td>
+                            <textarea name="newKnowledges[0].Knowledge1" placeholder="New Knowledge"></textarea>
+                        </td>
+                        <td>
+                            <textarea name="newKnowledges[0].Answer" placeholder="Answer"></textarea>
+                        </td>
+
+                    </tr>
+                </tbody>
+            </table>
+
+            <button type="button" onclick="addNewRow()" class="btn btn-success">Add More</button>
+            <button type="submit" class="btn btn-primary">Save</button>
+        </form>
+    </div>
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+          
+            <p>Are you sure you want to delete this row?</p>
+            <div class="modal-buttons">
+                <button id="confirmBtn" class="btn btn-danger">Yes</button>
+                <button id="cancelBtn" class="btn btn-secondary">No</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        var newRowId = 1;
+        var deletedKnowledgeIds = [];
+        var currentDeleteButton = null; // To store the current delete button context
+
+        function addNewRow() {
+            var tableBody = document.getElementById("knowledgeTable").getElementsByTagName('tbody')[0];
+            var newRow = document.createElement('tr');
+            newRow.id = "newRow_" + newRowId;
+            newRow.innerHTML = `
+                        <td>
+                            <textarea name="newKnowledges[${newRowId}].Knowledge1" placeholder="New Term" class="form-control textarea" required title="Please enter a Term"></textarea>
+                        </td>
+                        <td>
+                            <textarea name="newKnowledges[${newRowId}].Answer" placeholder="New Definition" class="form-control textarea" required title="Please enter an Answer"></textarea>
+                        </td>
+                        <td class="col-md-1">
+                            <button type="button" class="btn btn-danger" onclick="confirmDelete(this, null)">X</button>
+                        </td>
+                    `;
+            tableBody.appendChild(newRow);
+            newRowId++;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+    const textareas = document.querySelectorAll('.form-control');
+
+    textareas.forEach(textarea => {
+        textarea.style.height = 'auto';
+
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight + 10) + 'px';
+
+            if (this.scrollHeight > parseInt(window.getComputedStyle(this).maxHeight)) {
+                this.style.overflowY = 'auto';
+            } else {
+                this.style.overflowY = 'hidden';
+            }
+        });
+
+        textarea.dispatchEvent(new Event('input'));
+    });
+
+    // Modal functionality
+    var modal = document.getElementById("confirmModal");
+    var confirmBtn = document.getElementById("confirmBtn");
+    var cancelBtn = document.getElementById("cancelBtn");
+
+    cancelBtn.onclick = function() {
+        modal.style.display = "none";
+    }
+
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    confirmBtn.onclick = function() {
+        if (currentDeleteButton) {
+            var row = currentDeleteButton.closest('tr'); // Corrected to find the row
+            row.parentNode.removeChild(row);
+            var knowledgeId = currentDeleteButton.getAttribute("data-knowledge-id");
+            if (knowledgeId) {
+                deletedKnowledgeIds.push(knowledgeId);
+                document.getElementById('deletedKnowledgeIds').value = deletedKnowledgeIds.join(',');
+            }
+            modal.style.display = "none";
+            currentDeleteButton = null;
+        }
+    }
+});
+
+function confirmDelete(button, knowledgeId) {
+    currentDeleteButton = button;
+    currentDeleteButton.setAttribute("data-knowledge-id", knowledgeId);
+    var modal = document.getElementById("confirmModal");
+    modal.style.display = "block";
+}
+
+    </script>
+</body>

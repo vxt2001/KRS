@@ -1,0 +1,114 @@
+﻿@using X.PagedList.Mvc.Core
+@using X.PagedList
+@using X.PagedList.Web.Common;
+
+@model IPagedList<KRS_G54.Models.Exam>
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@addTagHelper *, AuthoringTagHelpers
+@{
+    ViewData["Title"] = "Manager Page";
+    Layout = "/Areas/Manager/Views/Shared/_Layout.cshtml";
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Exam Management</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>Exam Management</h1>
+    <div class="container" style="margin:0px">
+        <div class="row" style=" display: inline-flex;justify-content: space-around;">
+            
+            <div class="col">
+                <div class="dropdown">
+                    <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Filter by Subject...
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="dropdownSortButton">
+                        <a class="dropdown-item" href="@Url.Action("FilterBySubject", "Exam", new { subjectId = (int?)null })">All</a>
+                        @foreach (var item in ViewBag.ListSubject)
+                        {
+                            <a class="dropdown-item" href="@Url.Action("FilterBySubject", "Exam", new { subjectId = item.SubjectId })">@item.SubjectCode</a>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <form asp-controller="Exam" asp-action="Search">
+                    <div class="input-group">
+                        <input type="text" name="searchString" class="form-control" placeholder="Search by name">
+                        <div class="input-group-append">
+                            <button type="submit" class="btn btn-primary">Search</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <table class="table" style="margin-top:30px">
+        <thead>
+            <tr>
+                <th>Exam Name</th>
+                <th>Subject</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var exam in Model)
+            {
+                <tr>
+                    <td>@exam.ExamName</td>
+                    <td>@(string.IsNullOrEmpty(exam.Subject?.SubjectCode) ? "" : exam.Subject.SubjectCode)</td>
+                    <td>
+                        @Html.ActionLink("Edit", "Edit", new { Id = exam.ExamId }, new { @class = "btn btn-success mr-2" })
+                        <button type="button" class="btn btn-danger mr-2 delete-exam" data-id="@exam.ExamId">Delete</button>
+                        @Html.ActionLink("Edit List Question", "EditListQuestion", new { Id = exam.ExamId }, new { @class = "btn btn-primary" })
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div>
+        @Html.PagedListPager(Model, page => Url.Action("Index", new { page }), PagedListRenderOptions.Classic)
+    </div>
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            console.log('Document is ready'); // Log when document is ready
+            $('.delete-exam').each(function () {
+                console.log('Delete button found:', $(this).data('id')); // Log each delete button found
+            });
+
+            $('.delete-exam').click(function () {
+                if (confirm('Are you sure you want to delete this exam?')) {
+                    var examId = $(this).data('id');
+                    console.log('Exam ID to delete:', examId); // Log the exam ID
+
+                    $.ajax({
+                        type: 'POST',
+                        url: '@Url.Action("Delete", "Exam")',
+                        data: $.param({ id: examId }), // Use $.param to format the data
+                        contentType: 'application/x-www-form-urlencoded; charset=UTF-8', // Set the content type to URL-encoded
+                        success: function (response) {
+                            console.log('Server response:', response); // Log the server response
+                            if (response.success) {
+                                alert(response.message);
+                                location.reload(); // Reload the page or redirect as needed
+                            } else {
+                                alert('Error: ' + response.message);
+                            }
+                        },
+                        error: function (error) {
+                            console.log('Error response:', error); // Log the error response
+                            alert('Error: ' + error.responseText);
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

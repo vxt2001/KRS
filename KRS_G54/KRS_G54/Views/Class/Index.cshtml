@@ -1,0 +1,158 @@
+﻿@using Microsoft.AspNetCore.Http;
+@using X.PagedList.Mvc.Core; // Thêm thư viện này
+@using X.PagedList; // Thêm thư viện này
+@using X.PagedList.Web.Common;
+@{
+    Layout = "~/Views/Shared/_Layout1.cshtml";
+}
+
+<!-- header end -->
+<!-- Left sidebar menu start -->
+<div class="ttr-sidebar">
+    <div class="ttr-sidebar-wrapper content-scroll">
+        <div class="ttr-sidebar-logo">
+            <a style="margin:0" href="@Url.Action("Index", "Home", new { })"><img alt="" src="~/assets/images/logo-white-2.png" width="120" height="10"></a>
+            <div class="ttr-sidebar-toggle-button">
+                <i class="ti-menu"></i>
+            </div>
+        </div>
+        <nav class="ttr-sidebar-navi">
+            <ul>
+                <li>
+                    <a href="@Url.Action("Index", "Class")" class="ttr-material-button">
+                        <span class="ttr-icon"><i class="ti-book"></i></span>
+                        <span class="ttr-label">Class Info</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="@Url.Action("Exam", "Home")" class="ttr-material-button">
+                        <span class="ttr-icon"><i class="ti-book"></i></span>
+                        <span class="ttr-label">Exam</span>
+                    </a>
+                </li>
+
+                <li>
+                    @{
+                        var roleId = Context.Session.GetString("roleId");
+                        if (!string.IsNullOrEmpty(roleId)) // Kiểm tra xem roleId đã được đặt hay chưa
+                        {
+                            if (roleId.Equals("3"))
+                            {
+                                <a href="@Url.Action("ExamReport", "Home", new { classId = @ViewBag.ClazzId })" class="ttr-material-button">
+                                    <span class="ttr-icon"><i class="ti-home"></i></span>
+                                    <span class="ttr-label">Exam Report</span>
+                                </a>
+                            }
+                        }
+                    }
+                </li>
+
+                <li class="ttr-seperate"></li>
+            </ul>
+        </nav>
+
+    </div>
+</div>
+<!-- Left sidebar menu end -->
+<main class="ttr-wrapper">
+    <div class="container-fluid">
+        <div class="db-breadcrumb">
+            <ul class="db-breadcrumb-list">
+                <li><a href="#"><i class="fa fa-home"></i>Home</a></li>
+                <li>@ViewBag.className</li>
+            </ul>
+        </div>
+        <div class="row">
+            <!-- Your Profile Views Chart -->
+            <div class="col-lg-12 m-b30">
+                <div class="widget-box">
+                    <div class="wc-title">
+                        <h4>Class Name : @ViewBag.className</h4>
+                        <br>
+                        <h4>Teacher : @ViewBag.classTeacher</h4>
+                    </div>
+
+                    <div class="widget-inner">
+                        @foreach (Lesson item in ViewBag.Lessons)
+                        {
+                            <div class="card-courses-list admin-courses">
+                                <div class="card-courses-full-dec" style="margin-bottom: 40px;">
+                                    <div class="card-courses-list-bx">
+                                        <ul class="card-courses-view">
+                                            <li class="card-courses-stats">
+                                                <a  class="btn button-sm green radius-xl">Slot @item.Order</a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <div class="row card-courses-dec">
+                                        <div class="col-md-12">
+                                            <p>@item.Topic</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        <!-- Phân trang -->
+                        <div class="pagination">
+                            @Html.PagedListPager((IPagedList)ViewBag.Lessons, page => Url.Action("Index", new { page, id = ViewBag.ClazzId }), new PagedListRenderOptions
+                            {
+                            DisplayLinkToFirstPage = PagedListDisplayMode.Always,
+                            DisplayLinkToLastPage = PagedListDisplayMode.Always,
+                            DisplayLinkToPreviousPage = PagedListDisplayMode.Always,
+                            DisplayLinkToNextPage = PagedListDisplayMode.Always,
+                            DisplayLinkToIndividualPages = true,
+                            DisplayPageCountAndCurrentLocation = false,
+                            MaximumPageNumbersToDisplay = 10,
+                            DisplayEllipsesWhenNotShowingAllPageNumbers = true,
+                            EllipsesFormat = "&#8230;",
+                            LinkToFirstPageFormat = "First",
+                            LinkToPreviousPageFormat = "Previous",
+                            LinkToIndividualPageFormat = "{0}",
+                            LinkToNextPageFormat = "Next",
+                            LinkToLastPageFormat = "Last",
+                            ClassToApplyToFirstListItemInPager = null,
+                            ClassToApplyToLastListItemInPager = null,
+                            ContainerDivClasses = new[] { "pagination-container" },
+                            UlElementClasses = new[] { "pagination" },
+                            LiElementClasses = Enumerable.Empty<string>()
+                            })
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Your Profile Views Chart END-->
+        </div>
+    </div>
+</main>
+<div id="addEmployeeModal" class="modal fade">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="/Manager/Addproduct" method="POST">
+                <div class="modal-header">
+                    <h4 class="modal-title">Contact Support</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Title</label>
+                        <input name="title" type="text" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Enter your email or phone</label>
+                        <input name="image" type="text" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea name="description" id="description" class="form-control" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <input type="button" class="btn btn-outline-primary" data-dismiss="modal" value="Cancel">
+                    <input type="submit" class="btn btn-success" value="Add">
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="ttr-overlay"></div>
